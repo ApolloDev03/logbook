@@ -624,6 +624,7 @@ building_id: filters.buildingId || "",
     }
 
     return log?.[key] || "";
+    // return log?.[key] || "";
   };
 
   const sortLogs = (data, key, direction) => {
