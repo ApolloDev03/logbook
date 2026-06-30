@@ -167,14 +167,14 @@ const escapeExcelValue = (value) => {
 export default function Logs() {
   const [logs, setLogs] = useState([]);
   const [customerList, setCustomerList] = useState([]);
-const [buildingList, setBuildingList] = useState([]);
-const [buildingLoading, setBuildingLoading] = useState(false);
+  const [buildingList, setBuildingList] = useState([]);
+  const [buildingLoading, setBuildingLoading] = useState(false);
   const [filters, setFilters] = useState({
-   search: "",
-  customerId: "",
-  buildingId: "",
-  fromDate: "",
-  toDate: "",
+    search: "",
+    customerId: "",
+    buildingId: "",
+    fromDate: "",
+    toDate: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -198,7 +198,7 @@ const [buildingLoading, setBuildingLoading] = useState(false);
   ]);
 
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [sortConfig, setSortConfig] = useState({
@@ -207,9 +207,9 @@ const [buildingLoading, setBuildingLoading] = useState(false);
   });
   const authUser = getAuthUser();
 
-const roleId = Number(
-  authUser?.role_id ?? authUser?.customer?.role_id
-);
+  const roleId = Number(
+    authUser?.role_id ?? authUser?.customer?.role_id
+  );
   const logManagementPermission = (authUser?.permissions || []).find((item) => {
     const permissionName = String(item?.permission_name || "")
       .trim()
@@ -293,41 +293,41 @@ const roleId = Number(
       setCustomerLoading(false);
     }
   };
-const getBuildingList = async (customerId = "") => {
-  try {
-    setBuildingLoading(true);
+  const getBuildingList = async (customerId = "") => {
+    try {
+      setBuildingLoading(true);
 
-    const response = await axios.post(
-      `${apiUrl}/auth/get_buildings_by_customer`,
-      {
-        customer_id: customerId || "",
-      },
-      {
-        headers: getAuthHeaders(),
+      const response = await axios.post(
+        `${apiUrl}/auth/get_buildings_by_customer`,
+        {
+          customer_id: customerId || "",
+        },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (response?.data?.success) {
+        setBuildingList(response?.data?.data || []);
+      } else {
+        setBuildingList([]);
       }
-    );
-
-    if (response?.data?.success) {
-      setBuildingList(response?.data?.data || []);
-    } else {
+    } catch (error) {
       setBuildingList([]);
+    } finally {
+      setBuildingLoading(false);
     }
-  } catch (error) {
-    setBuildingList([]);
-  } finally {
-    setBuildingLoading(false);
-  }
-};
+  };
 
-useEffect(() => {
-  if (authUser?.role_id === 1) return;
+  useEffect(() => {
+    if (authUser?.role_id === 1) return;
 
-  const customerId = authUser?.customer?.customer_id;
+    const customerId = authUser?.customer?.customer_id;
 
-  if (customerId) {
-    getBuildingList(customerId);
-  }
-}, []);
+    if (customerId) {
+      getBuildingList(customerId);
+    }
+  }, []);
 
   useEffect(() => {
     getCustomerDropdown();
@@ -335,7 +335,7 @@ useEffect(() => {
     getBuildingList("");
   }, []);
 
-  const getLogList = async (pageNumber = 1) => {
+  const getLogList = async (pageNumber = 1, customLimit = limit) => {
     try {
       if (!getToken()) {
         toast.error("Token not found. Please login again.");
@@ -346,10 +346,10 @@ useEffect(() => {
 
       const payload = {
         page: pageNumber,
-        limit: limit,
+        limit: customLimit,
         search: filters.search || "",
 
-building_id: filters.buildingId || "",
+        building_id: filters.buildingId || "",
         created_by_id:
           authUser?.role_id === 1 || authUser?.role_id === 3
             ? null
@@ -662,79 +662,79 @@ building_id: filters.buildingId || "",
     );
   };
   const resetFilters = () => {
-  setFilters({
-    search: "",
-    customerId: "",
-    buildingId: "",
-    fromDate: "",
-    toDate: "",
-  });
-
-  setRange([
-    {
-      startDate: new Date(),
-      endDate: new Date(),
-      key: "selection",
-    },
-  ]);
-
-  setPage(1);
-
-  // Admin => Load All Buildings
-  if (authUser?.role_id === 1) {
-    getBuildingList("");
-  } else {
-    getBuildingList(authUser?.customer?.customer_id || "");
-  }
-
-  // Reload logs
-  getLogList(1);
-};
-
-const exportLogs = async () => {
-  try {
-    const response = await axios.post(
-      `${apiUrl}/auth/export_log`,
-      {
-        search: filters.search || "",
-        building_id: filters.buildingId || "",
-        customer_id: filters.customerId || "",
-        start_date: filters.fromDate || "",
-        end_date: filters.toDate || "",
-        postcode: "",
-        address: "",
-        address_line_2: "",
-      },
-      {
-        headers: getAuthHeaders(),
-        responseType: "blob",
-      }
-    );
-
-    const blob = new Blob([response.data], {
-      type: response.headers["content-type"] || "text/csv",
+    setFilters({
+      search: "",
+      customerId: "",
+      buildingId: "",
+      fromDate: "",
+      toDate: "",
     });
 
-    const url = window.URL.createObjectURL(blob);
+    setRange([
+      {
+        startDate: new Date(),
+        endDate: new Date(),
+        key: "selection",
+      },
+    ]);
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `logs-report.csv`; // or .xlsx if API returns Excel
-    document.body.appendChild(link);
+    setPage(1);
 
-    link.click();
+    // Admin => Load All Buildings
+    if (authUser?.role_id === 1) {
+      getBuildingList("");
+    } else {
+      getBuildingList(authUser?.customer?.customer_id || "");
+    }
 
-    link.remove();
-    window.URL.revokeObjectURL(url);
+    // Reload logs
+    getLogList(1);
+  };
 
-    toast.success("Logs exported successfully.");
-  } catch (error) {
-    toast.error(
-      error?.response?.data?.message ||
-      "Failed to export logs."
-    );
-  }
-};
+  const exportLogs = async () => {
+    try {
+      const response = await axios.post(
+        `${apiUrl}/auth/export_log`,
+        {
+          search: filters.search || "",
+          building_id: filters.buildingId || "",
+          customer_id: filters.customerId || "",
+          start_date: filters.fromDate || "",
+          end_date: filters.toDate || "",
+          postcode: "",
+          address: "",
+          address_line_2: "",
+        },
+        {
+          headers: getAuthHeaders(),
+          responseType: "blob",
+        }
+      );
+
+      const blob = new Blob([response.data], {
+        type: response.headers["content-type"] || "text/csv",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `logs-report.csv`; // or .xlsx if API returns Excel
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Logs exported successfully.");
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+        "Failed to export logs."
+      );
+    }
+  };
   return (
     <>
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -749,32 +749,32 @@ const exportLogs = async () => {
         <div className="m-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
             <input
-  type="text"
-  placeholder="Search List In Poatcode,Address..."
-  className="form-input"
-  value={filters.search}
-  onChange={(e) =>
-    updateFilter("search", e.target.value)
-  }
-/>
+              type="text"
+              placeholder="Search List In Poatcode,Address..."
+              className="form-input"
+              value={filters.search}
+              onChange={(e) =>
+                updateFilter("search", e.target.value)
+              }
+            />
             {authUser.role_id === 1 && (
               <div className="relative">
                 <select
                   className="form-select"
                   value={filters.customerId}
-    onChange={(e) => {
-  const customerId = e.target.value;
+                  onChange={(e) => {
+                    const customerId = e.target.value;
 
-  setFilters((prev) => ({
-    ...prev,
-    customerId,
-    buildingId: "",
-  }));
+                    setFilters((prev) => ({
+                      ...prev,
+                      customerId,
+                      buildingId: "",
+                    }));
 
-  // If company selected => company wise buildings
-  // If no company selected => all buildings
-  getBuildingList(customerId);
-}}
+                    // If company selected => company wise buildings
+                    // If no company selected => all buildings
+                    getBuildingList(customerId);
+                  }}
                   disabled={customerLoading}
                 >
                   <option value="">
@@ -792,26 +792,26 @@ const exportLogs = async () => {
             )}
 
             <div className="relative">
-  <select
-  className="form-select"
-  value={filters.buildingId}
-  onChange={(e) => updateFilter("buildingId", e.target.value)}
-  disabled={buildingLoading}
->
-  <option value="">All Buildings</option>
+              <select
+                className="form-select"
+                value={filters.buildingId}
+                onChange={(e) => updateFilter("buildingId", e.target.value)}
+                disabled={buildingLoading}
+              >
+                <option value="">All Buildings</option>
 
-  {buildingList.map((building) => (
-    <option
-      key={building.building_id}
-      value={building.building_id}
-    >
-      {building.building_name}
-    </option>
-  ))}
-</select>
+                {buildingList.map((building) => (
+                  <option
+                    key={building.building_id}
+                    value={building.building_id}
+                  >
+                    {building.building_name}
+                  </option>
+                ))}
+              </select>
 
-  <SelectArrow />
-</div>
+              <SelectArrow />
+            </div>
 
             <div className="relative" ref={datePickerRef}>
               <button
@@ -860,31 +860,31 @@ const exportLogs = async () => {
                 </div>
               )}
             </div>
-           
+
           </div>
-        <div className="flex justify-end gap-4 pt-4">
-  <button
-    type="button"
-    onClick={exportLogs}
-    className="rounded-lg btn-primary px-4 py-2  "
-  >
-    Export
-  </button>
- <button
-  type="button"
-  onClick={() => getLogList(1)}
-   className="btn-primary  disabled:cursor-not-allowed disabled:opacity-70"
->
-  Search
-</button>
-<button
-  type="button"
-  onClick={resetFilters}
-  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
->
-  Clear
-</button>
-        </div>
+          <div className="flex justify-end gap-4 pt-4">
+            <button
+              type="button"
+              onClick={exportLogs}
+              className="rounded-lg btn-primary px-4 py-2  "
+            >
+              Export
+            </button>
+            <button
+              type="button"
+              onClick={() => getLogList(1)}
+              className="btn-primary  disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              Search
+            </button>
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            >
+              Clear
+            </button>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full border border-gray-200 text-left text-sm dark:border-gray-800">
@@ -1023,8 +1023,31 @@ const exportLogs = async () => {
         </div>
 
         <div className="flex flex-col gap-3 border-t border-gray-100 px-4 py-4 text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            Showing {getShowingStart()} to {getShowingEnd()} of {total} entries
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Show
+            </span>
+
+            <select
+              value={limit}
+              onChange={(e) => {
+                const newLimit = Number(e.target.value);
+
+                setLimit(newLimit);
+                setPage(1);
+
+                // Fetch first page with new limit
+                getLogList(1, newLimit);
+              }}
+              className="rounded-lg border border-gray-300 px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={200}>200</option>
+              <option value={500}>500</option>
+            </select>
           </div>
 
           <div className="flex items-center gap-2">
@@ -1045,8 +1068,8 @@ const exportLogs = async () => {
                   disabled={loading}
                   onClick={() => handlePageChange(pageNumber)}
                   className={`rounded-lg border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${pageNumber === page
-                      ? "border-blue-600 bg-blue-600 text-white"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    ? "border-blue-600 bg-blue-600 text-white"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                     }`}
                 >
                   {pageNumber}
@@ -1133,14 +1156,14 @@ const exportLogs = async () => {
               </h3>
 
               <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
-               
-               {
-                roleId != 3 &&
-                <Info
-                  label="Company Name"
-                  value={selectedLog?.customer_company_name}
-                />
-               }
+
+                {
+                  roleId != 3 &&
+                  <Info
+                    label="Company Name"
+                    value={selectedLog?.customer_company_name}
+                  />
+                }
 
                 <Info
                   label="Building Name"
@@ -1148,16 +1171,16 @@ const exportLogs = async () => {
                 />
                 <Info label="UPRN" value={selectedLog?.uprn_no} />
                 <Info label="Address Line 1" value={selectedLog?.address} />
-<Info label="Address Line 2" value={selectedLog?.address_line_2} />
+                <Info label="Address Line 2" value={selectedLog?.address_line_2} />
                 <Info label="Country" value={selectedLog?.country_name} />
-                          {!["uk", "united kingdom"].includes(
-  selectedLog?.country_name?.toLowerCase()
-) && (
-  <Info
-    label="State"
-    value={selectedLog?.state_name}
-  />
-)}  
+                {!["uk", "united kingdom"].includes(
+                  selectedLog?.country_name?.toLowerCase()
+                ) && (
+                    <Info
+                      label="State"
+                      value={selectedLog?.state_name}
+                    />
+                  )}
                 <Info label="City" value={selectedLog?.city_name} />
                 <Info label="Postcode" value={selectedLog?.postcode} />
                 <Info label="Access Information" value={selectedLog?.landmark} />

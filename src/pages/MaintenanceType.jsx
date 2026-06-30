@@ -85,7 +85,7 @@ export default function MaintenanceType() {
   const [search, setSearch] = useState("");
 
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
 
   const [loading, setLoading] = useState(false);
@@ -148,7 +148,7 @@ export default function MaintenanceType() {
     };
   }, [deleteModalOpen]);
 
-  const fetchMaintenanceTypes = async () => {
+  const fetchMaintenanceTypes = async (customPage = page, customLimit = limit) => {
     try {
       if (!canReadMaintenanceType) {
         setMaintenanceTypes([]);
@@ -161,8 +161,8 @@ export default function MaintenanceType() {
       const res = await axios.post(
         `${apiUrl}/auth/maintenance_type_list`,
         {
-          page,
-          limit,
+          page: customPage,
+          limit: customLimit,
           search,
         },
         { headers: getAuthHeaders() },
@@ -440,6 +440,34 @@ export default function MaintenanceType() {
         </div>
 
         <div className="flex items-center justify-between gap-4 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Show
+            </span>
+
+            <select
+              value={limit}
+              onChange={(e) => {
+                const newLimit = Number(e.target.value);
+
+                setLimit(newLimit);
+                setPage(1);
+
+                // Fetch first page with new limit
+                fetchMaintenanceTypes(1, newLimit);
+              }}
+              className="rounded-lg border border-gray-300 px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={200}>200</option>
+              <option value={500}>500</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
           <button
             type="button"
             disabled={page <= 1 || loading}
@@ -461,6 +489,7 @@ export default function MaintenanceType() {
           >
             Next
           </button>
+          </div>
         </div>
       </div>
 

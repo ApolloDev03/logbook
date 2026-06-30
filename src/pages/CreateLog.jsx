@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-// import { Calendar } from "react-date-range";
+import { Calendar } from "react-date-range";
 import {
   DatePickerComponent,
 } from "@syncfusion/ej2-react-calendars";

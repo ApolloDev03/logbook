@@ -141,7 +141,7 @@ export default function Customer() {
   const [viewLoading, setViewLoading] = useState(false);
 
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -221,7 +221,7 @@ export default function Customer() {
     }
   };
 
-  const getCustomerList = async (pageNumber = 1) => {
+  const getCustomerList = async (pageNumber = 1, customLimit = limit) => {
     try {
       const token = getToken();
 
@@ -236,7 +236,7 @@ export default function Customer() {
         search: search,
         country_id: countryId,
         page: pageNumber,
-        limit: limit,
+        limit: customLimit,
       };
 
       const response = await axios.post(
@@ -518,6 +518,14 @@ export default function Customer() {
                 Add Customer
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={() => navigate("/customer-import")}
+              className="rounded-lg bg-green-600 px-5 py-2.5 font-medium text-white transition hover:bg-green-700"
+            >
+              Import
+            </button>
           </div>
         </div>
 
@@ -644,8 +652,31 @@ export default function Customer() {
         </div>
 
         <div className="flex flex-col gap-3 border-t border-gray-100 px-4 py-4 text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            Showing {getShowingStart()} to {getShowingEnd()} of {total} entries
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Show
+            </span>
+
+            <select
+              value={limit}
+              onChange={(e) => {
+                const newLimit = Number(e.target.value);
+
+                setLimit(newLimit);
+                setPage(1);
+
+                // Fetch first page with new limit
+                getCustomerList(1, newLimit);
+              }}
+              className="rounded-lg border border-gray-300 px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={200}>200</option>
+              <option value={500}>500</option>
+            </select>
           </div>
 
           <div className="flex items-center gap-2">
