@@ -31,6 +31,13 @@ import "@syncfusion/ej2-buttons/styles/material.css";
 import "@syncfusion/ej2-inputs/styles/material.css";
 import "@syncfusion/ej2-popups/styles/material.css";
 import "@syncfusion/ej2-react-calendars/styles/material.css";
+import EmployeeImport from "./pages/EmployeeImport";
+import CustomerImport from "./pages/CustomerImport";
+import BuildingImport from "./pages/BuildingImport";
+
+import "react-datepicker/dist/react-datepicker.css";
+import "./styles/datepicker.css";
+
 function getStoredUser() {
   try {
     const user = localStorage.getItem("auth_user");
@@ -189,6 +196,15 @@ function AppRoutes() {
         />
 
         <Route
+          path="/employee-import"
+          element={
+            <LayoutRoute>
+              <EmployeeImport />
+            </LayoutRoute>
+          }
+        />
+
+        <Route
           path="/customer"
           element={
             <LayoutRoute>
@@ -207,6 +223,15 @@ function AppRoutes() {
         />
 
         <Route
+          path="/customer-import"
+          element={
+            <LayoutRoute>
+              <CustomerImport />
+            </LayoutRoute>
+          }
+        />
+
+        <Route
           path="/building"
           element={
             <LayoutRoute>
@@ -220,6 +245,15 @@ function AppRoutes() {
           element={
             <LayoutRoute>
               <CreateBuilding />
+            </LayoutRoute>
+          }
+        />
+
+        <Route
+          path="/building-import"
+          element={
+            <LayoutRoute>
+              <BuildingImport />
             </LayoutRoute>
           }
         />

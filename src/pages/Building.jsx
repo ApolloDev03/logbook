@@ -122,7 +122,7 @@ export default function Building() {
   const [generatedQrIds, setGeneratedQrIds] = useState([]);
 
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -184,7 +184,7 @@ export default function Building() {
     };
   }, [viewModalOpen, deleteModalOpen, qrModalOpen]);
 
-  const getBuildingList = async (pageNumber = 1) => {
+  const getBuildingList = async (pageNumber = 1, customLimit = limit) => {
     try {
       if (!getToken()) {
         toast.error("Token not found. Please login again.");
@@ -203,7 +203,7 @@ export default function Building() {
           //customer_id: roleId == 3 ? authUser?.customer?.customer_id : "",
           customer_id:  authUser?.customer?.customer_id != '' ? authUser?.customer?.customer_id  : "",
           page: pageNumber,
-          limit: limit,
+          limit: customLimit,
           search: search,
           created_by_id: "",
         },
@@ -638,7 +638,7 @@ export default function Building() {
               className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
             />
           </div>
-
+              <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
           {canWriteBuilding && (
             <button
               type="button"
@@ -648,6 +648,15 @@ export default function Building() {
               Add Building
             </button>
           )}
+
+          <button
+              type="button"
+              onClick={() => navigate("/building-import")}
+              className="rounded-lg bg-green-600 px-5 py-2.5 font-medium text-white transition hover:bg-green-700"
+            >
+              Import
+            </button>
+            </div>
         </div>
 
         <div className="w-full overflow-x-auto">
@@ -888,8 +897,31 @@ export default function Building() {
         </div>
 
         <div className="flex flex-col gap-3 border-t border-gray-100 px-4 py-4 text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            Showing {getShowingStart()} to {getShowingEnd()} of {total} entries
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Show
+            </span>
+
+            <select
+              value={limit}
+              onChange={(e) => {
+                const newLimit = Number(e.target.value);
+
+                setLimit(newLimit);
+                setPage(1);
+
+                // Fetch first page with new limit
+                getBuildingList(1, newLimit);
+              }}
+              className="rounded-lg border border-gray-300 px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={200}>200</option>
+              <option value={500}>500</option>
+            </select>
           </div>
 
           <div className="flex items-center gap-2">
