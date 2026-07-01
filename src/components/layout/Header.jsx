@@ -45,47 +45,51 @@ export default function Header() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [notifying, setNotifying] = useState(true);
 
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationLoading, setNotificationLoading] = useState(false);
+
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
-  const notifications = [
-    {
-      id: 1,
-      name: "Terry Franci",
-      action: "Quarterly Log Generated",
-      project: "Project - Building Name",
-      type: "Project",
-      time: "5 min ago",
-      img: img1,
-    },
-    {
-      id: 2,
-      name: "Alena Franci",
-      action: "Half Yearly Log Generated",
-      project: "Project - School Name",
-      type: "Project",
-      time: "8 min ago",
-      img: img2,
-    },
-    {
-      id: 3,
-      name: "Jocelyn Kenter",
-      action: "Quarterly Log Generated",
-      project: "Project - Hospital name",
-      type: "Project",
-      time: "15 min ago",
-      img: img3,
-    },
-    {
-      id: 4,
-      name: "Brandon Philips",
-      action: "Monthly Log Generated",
-      project: "Project - Building Name",
-      type: "Project",
-      time: "1 hr ago",
-      img: img4,
-    },
-  ];
+  // const notifications = [
+  //   {
+  //     id: 1,
+  //     name: "Terry Franci",
+  //     action: "Quarterly Log Generated",
+  //     project: "Project - Building Name",
+  //     type: "Project",
+  //     time: "5 min ago",
+  //     img: img1,
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Alena Franci",
+  //     action: "Half Yearly Log Generated",
+  //     project: "Project - School Name",
+  //     type: "Project",
+  //     time: "8 min ago",
+  //     img: img2,
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "Jocelyn Kenter",
+  //     action: "Quarterly Log Generated",
+  //     project: "Project - Hospital name",
+  //     type: "Project",
+  //     time: "15 min ago",
+  //     img: img3,
+  //   },
+  //   {
+  //     id: 4,
+  //     name: "Brandon Philips",
+  //     action: "Monthly Log Generated",
+  //     project: "Project - Building Name",
+  //     type: "Project",
+  //     time: "1 hr ago",
+  //     img: img4,
+  //   },
+  // ];
 
   useEffect(() => {
     const h = (e) => {
@@ -137,24 +141,108 @@ export default function Header() {
       setProfileLoading(false);
     }
   };
+
+  const fetchUnreadNotificationCount = async () => {
+    try {
+      const res = await axios.post(
+        `${apiUrl}/auth/unread_log_count`,
+        {
+          customer_id: authUser?.role_id === 3 ? authUser?.customer?.customer_id || "" : "",
+        },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (res.data?.success) {
+        setUnreadCount(res.data.unread_count || 0);
+        setNotifying((res.data.unread_count || 0) > 0);
+      }
+    } catch (error) {
+      console.error("Unread Count API Error:", error);
+    }
+  };
+
+  const fetchNotificationList = async () => {
+    try {
+      setNotificationLoading(true);
+
+      const res = await axios.post(
+        `${apiUrl}/auth/notification_list`,
+        {
+          page: "1",
+          limit: "10",
+          customer_id: authUser?.role_id === 3 ? authUser?.customer?.customer_id || "" : "",
+        },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (res.data?.success) {
+        setNotifications(res.data.data || []);
+        setUnreadCount(res.data.unread_count || 0);
+      }
+    } catch (error) {
+      console.error("Notification List Error:", error);
+    } finally {
+      setNotificationLoading(false);
+    }
+  };
+
+  const markNotificationsAsRead = async () => {
+    if (!notifications.length) return;
+
+    try {
+      const logIds = notifications.map((item) => item.log_id);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/mark_log_as_read`,
+        {
+          log_id: logIds,
+        },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (response.data?.success) {
+        setUnreadCount(0);
+
+        setNotifications((prev) =>
+          prev.map((item) => ({
+            ...item,
+            is_read: 1,
+          }))
+        );
+
+        fetchUnreadNotificationCount()
+      }
+    } catch (error) {
+      console.error("Mark notification error:", error);
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
+    fetchUnreadNotificationCount();
   }, []);
+
   console.log(profile?.profile_image_url, "profile");
- const getProfileImage = () => {
-  const image =
-    profile?.profile_image_url;
+  const getProfileImage = () => {
+    const image =
+      profile?.profile_image_url;
 
-  if (!image) return defaultLogo;
+    if (!image) return defaultLogo;
 
-  if (image.startsWith("http://") || image.startsWith("https://")) {
-    return image;
-  }
+    if (image.startsWith("http://") || image.startsWith("https://")) {
+      return image;
+    }
 
-  return `${apiUrl.replace("/api", "")}/${image.replace(/^\/+/, "")}`;
-};
+    return `${apiUrl.replace("/api", "")}/${image.replace(/^\/+/, "")}`;
+  };
 
-const profileImage = getProfileImage();
+  const profileImage = getProfileImage();
   const profileName =
     authUser?.role_id == 3
       ? profile?.customer_company_name
@@ -175,11 +263,10 @@ const profileImage = getProfileImage();
                 setSidebarToggle((v) => !v); // desktop collapse/expand
               }
             }}
-            className={`z-[99999] flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border-gray-200 text-gray-500 lg:h-11 lg:w-11 lg:border dark:border-gray-800 dark:text-gray-400 ${
-              sidebarToggle
-                ? "bg-gray-100 lg:bg-transparent dark:bg-gray-800 dark:lg:bg-transparent"
-                : ""
-            }`}
+            className={`z-[99999] flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border-gray-200 text-gray-500 lg:h-11 lg:w-11 lg:border dark:border-gray-800 dark:text-gray-400 ${sidebarToggle
+              ? "bg-gray-100 lg:bg-transparent dark:bg-gray-800 dark:lg:bg-transparent"
+              : ""
+              }`}
           >
             <svg
               className="hidden fill-current lg:block"
@@ -235,9 +322,8 @@ const profileImage = getProfileImage();
               e.stopPropagation();
               setMenuToggle((v) => !v);
             }}
-            className={`z-[99999] flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 lg:hidden dark:text-gray-400 dark:hover:bg-gray-800 ${
-              menuToggle ? "bg-gray-100 dark:bg-gray-800" : ""
-            }`}
+            className={`z-[99999] flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 lg:hidden dark:text-gray-400 dark:hover:bg-gray-800 ${menuToggle ? "bg-gray-100 dark:bg-gray-800" : ""
+              }`}
           >
             <svg
               className="fill-current"
@@ -257,9 +343,8 @@ const profileImage = getProfileImage();
         </div>
 
         <div
-          className={`w-full items-center justify-between gap-4 border-t border-gray-100 bg-white px-3 py-3 shadow-theme-md dark:border-gray-800 dark:bg-gray-900 sm:px-4 lg:flex lg:w-auto lg:justify-end lg:border-t-0 lg:bg-transparent lg:px-0 lg:py-0 lg:shadow-none dark:lg:bg-transparent ${
-            menuToggle ? "flex" : "hidden"
-          }`}
+          className={`w-full items-center justify-between gap-4 border-t border-gray-100 bg-white px-3 py-3 shadow-theme-md dark:border-gray-800 dark:bg-gray-900 sm:px-4 lg:flex lg:w-auto lg:justify-end lg:border-t-0 lg:bg-transparent lg:px-0 lg:py-0 lg:shadow-none dark:lg:bg-transparent ${menuToggle ? "flex" : "hidden"
+            }`}
         >
           <div className="flex shrink-0 items-center gap-2 2xl:gap-3">
             <button
@@ -305,14 +390,20 @@ const profileImage = getProfileImage();
               <button
                 type="button"
                 onClick={() => {
+                  const nextState = !notifOpen;
+
                   setNotifOpen((v) => !v);
                   setNotifying(false);
+
+                  if (nextState) {
+                    fetchNotificationList();
+                  }
                 }}
                 className="hover:text-dark-900 relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
               >
-                {notifying && (
-                  <span className="absolute top-0.5 right-0 z-10 flex h-2 w-2 rounded-full bg-orange-400">
-                    <span className="absolute -z-10 inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 z-20 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                    {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
 
@@ -360,48 +451,72 @@ const profileImage = getProfileImage();
                   </div>
 
                   <ul className="custom-scrollbar flex flex-1 flex-col overflow-y-auto">
-                    {notifications.map((item) => (
-                      <li key={item.id}>
-                        <a
-                          className="flex gap-3 rounded-lg border-b border-gray-100 px-3 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5 sm:px-4.5"
-                          href="#"
-                        >
-                          <span className="relative z-10 block h-10 w-full max-w-10 shrink-0 rounded-full">
-                            <img
-                              src={item.img}
-                              alt={item.name}
-                              className="h-full w-full overflow-hidden rounded-full object-cover"
-                            />
-                          </span>
+                    {notificationLoading ? (
+                      <div className="py-8 text-center text-gray-500">
+                        Loading notifications...
+                      </div>
+                    ) : notifications.length > 0 ? (
+                      notifications.map((item) => (
+                        <li key={item.log_id}>
+                          <button
+                            className="flex gap-3 rounded-lg border-b border-gray-100 px-3 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5 sm:px-4.5"
+                            type="button"
+                            onClick={async () => {
+                              await markNotificationsAsRead();
 
-                          <span className="block min-w-0">
-                            <span className="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400">
-                              <span className="font-medium text-gray-800 dark:text-white/90">
-                                {item.name}
-                              </span>{" "}
-                              {item.action}{" "}
-                              <span className="font-medium text-gray-800 dark:text-white/90">
-                                {item.project}
+                              setNotifOpen(false);
+                            }}
+                          >
+                            <span className="relative z-10 block h-10 w-full max-w-10 shrink-0 rounded-full">
+                              <img
+                                src={item.avatar_url || defaultLogo}
+                                alt={item.created_by_name}
+                                className="h-full w-full overflow-hidden rounded-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.onerror = null;
+                                  e.currentTarget.src = defaultLogo;
+                                }}
+                              />
+                            </span>
+
+                            <span className="block min-w-0 text-start">
+                              <span className="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400">
+                                <span className="font-medium text-gray-800 dark:text-white/90">
+                                  {item.created_by_name}
+                                </span>{" "}
+                                {item.notification_title}{" "}
+                                <span className="font-medium text-gray-800 dark:text-white/90">
+                                  {item.notification_message}
+                                </span>
+                              </span>
+
+                              <span className="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                                <span>{item.notification_type}</span>
+                                <span className="h-1 w-1 rounded-full bg-gray-400" />
+                                <span>{item.time_ago}</span>
                               </span>
                             </span>
-
-                            <span className="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                              <span>{item.type}</span>
-                              <span className="h-1 w-1 rounded-full bg-gray-400" />
-                              <span>{item.time}</span>
-                            </span>
-                          </span>
-                        </a>
-                      </li>
-                    ))}
+                          </button>
+                        </li>
+                      ))
+                    ) : (
+                      <div className="py-8 text-center text-gray-500">
+                        No notifications found.
+                      </div>
+                    )}
                   </ul>
 
-                  <a
-                    href="#"
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await markNotificationsAsRead();
+
+                      setNotifOpen(false);
+                    }}
                     className="text-theme-sm shadow-theme-xs mt-3 flex justify-center rounded-lg border border-gray-300 bg-white p-3 font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
                   >
                     View All Logs
-                  </a>
+                  </button>
                 </div>
               )}
             </div>
@@ -414,15 +529,15 @@ const profileImage = getProfileImage();
               className="flex min-w-0 items-center text-gray-700 dark:text-gray-300"
             >
               <span className="mr-0 h-10 w-10 shrink-0 overflow-hidden rounded-full sm:mr-3 sm:h-11 sm:w-11">
-  <img
-  src={profileImage}
-  alt={profileName}
-  className="h-full w-full object-cover"
-  onError={(e) => {
-    e.currentTarget.onerror = null;
-    e.currentTarget.src = defaultLogo;
-  }}
-/>
+                <img
+                  src={profileImage}
+                  alt={profileName}
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = defaultLogo;
+                  }}
+                />
               </span>
 
               <span className="text-theme-sm mr-1 hidden max-w-[110px] truncate text-sm font-medium text-gray-700 dark:text-gray-400 sm:block">
@@ -430,9 +545,8 @@ const profileImage = getProfileImage();
               </span>
 
               <svg
-                className={`hidden transition-transform text-gray-500 dark:text-gray-300 sm:block ${
-                  profileOpen ? "rotate-180" : ""
-                }`}
+                className={`hidden transition-transform text-gray-500 dark:text-gray-300 sm:block ${profileOpen ? "rotate-180" : ""
+                  }`}
                 width="18"
                 height="20"
                 viewBox="0 0 18 20"
