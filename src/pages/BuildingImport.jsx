@@ -48,7 +48,7 @@ export default function BuildingImport() {
 
     try {
       const response = await axios.post(
-        `${apiUrl}/auth/download_csv_template`,
+        `${apiUrl}/auth/download-building-csv-template`,
         {},
         {
           headers: getAuthHeaders(),
@@ -66,7 +66,7 @@ export default function BuildingImport() {
       const link = document.createElement("a");
 
       link.href = url;
-      link.setAttribute("download", "Employee_Template.csv");
+      link.setAttribute("download", "Building_Template.csv");
 
       document.body.appendChild(link);
       link.click();
@@ -74,11 +74,11 @@ export default function BuildingImport() {
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      toast.success("Template downloaded successfully.");
+      toast.success("Building Template downloaded successfully.");
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||
-        "Failed to download template."
+        "Failed to download building template."
       );
     }
   };

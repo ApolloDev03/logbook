@@ -12,9 +12,10 @@ import {
 } from "chart.js";
 import { useApp } from "../context/AppContext";
 import { apiUrl } from "../config";
-import PeriodFilter from "../components/ui/PeriodFilter";
+// import PeriodFilter from "../components/ui/PeriodFilter";
 import PopupModal from "../components/ui/PopupModal";
 import { format } from "date-fns";
+import DashboardFilters from "../components/ui/DashboardFilters";
 
 ChartJS.register(
   CategoryScale,
@@ -176,9 +177,9 @@ const formatOnlyTime = (dateValue) => {
 };
 
 export default function EngineerDashboard() {
-  
+
   const { darkMode } = useApp();
-const [selectedPeriod, setSelectedPeriod] = useState("weekly");
+  const [selectedPeriod, setSelectedPeriod] = useState("weekly");
   const [dashboardData, setDashboardData] = useState(null);
   const [logs, setLogs] = useState([]);
   const [sortDir, setSortDir] = useState(true);
@@ -188,13 +189,33 @@ const [selectedPeriod, setSelectedPeriod] = useState("weekly");
   const tickColor = darkMode ? "#98a2b3" : "#667085";
   const gridColor = darkMode ? "rgba(255,255,255,0.06)" : "#f3f4f6";
   const [viewModalOpen, setViewModalOpen] = useState(false);
-const [selectedLog, setSelectedLog] = useState(null);
-const [viewLoading, setViewLoading] = useState(false);
+  const [selectedLog, setSelectedLog] = useState(null);
+  const [viewLoading, setViewLoading] = useState(false);
 
-const closeViewModal = () => {
-  setSelectedLog(null);
-  setViewModalOpen(false);
-};
+  const [selectedYear, setSelectedYear] = useState(
+    new Date().getFullYear()
+  );
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  const getNearestSunday = (date) => {
+    if (!date) return "";
+
+    const d = new Date(date);
+
+    const day = d.getDay();
+
+    const diff = day === 0 ? 0 : 7 - day;
+
+    d.setDate(d.getDate() + diff);
+
+    return format(d, "yyyy-MM-dd");
+  };
+
+  const closeViewModal = () => {
+    setSelectedLog(null);
+    setViewModalOpen(false);
+  };
 
   const formatLogIdWithPrefix = (log) => {
     if (!log?.log_id) return "-";
@@ -210,21 +231,33 @@ const closeViewModal = () => {
 
     return prefix ? `${prefix}-${id}` : id;
   };
-const authUser = getAuthUser();
-const roleId = Number(
-  authUser?.role_id ?? authUser?.customer?.role_id
-);
+  const authUser = getAuthUser();
+  const roleId = Number(
+    authUser?.role_id ?? authUser?.customer?.role_id
+  );
   const fetchDashboard = async () => {
     try {
       setLoading(true);
 
-      const customerRoleId = authUser?.customer?.role_id; 
+      const customerRoleId = authUser?.customer?.role_id;
       const payload = {
         customer_id: authUser?.customer?.customer_id || "",
-        created_by_id: authUser?.id || "",
+        // created_by_id: authUser?.id || "",
         role_id: String(authUser?.role_id || ""),
         is_admin_engineer: Number(customerRoleId) === 1 ? 1 : null,
       };
+      if (selectedYear) {
+        payload.year = String(selectedYear);
+      }
+
+      if (selectedMonth !== null) {
+        payload.month = String(selectedMonth + 1);
+      }
+
+      if (selectedDate) {
+        payload.start_date = format(selectedDate, "yyyy-MM-dd");
+        payload.end_date = getNearestSunday(selectedDate);
+      }
 
       console.log("Engineer Dashboard Payload:", payload);
 
@@ -249,10 +282,10 @@ const roleId = Number(
           building: item.building || "-",
           date: item.created_at
             ? new Date(item.created_at).toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
             : "-",
         }));
 
@@ -267,50 +300,51 @@ const roleId = Number(
 
   useEffect(() => {
     fetchDashboard();
-  }, []);
-const getLogById = async (logId) => {
-  try {
-    setSelectedLog(null);
-    setViewModalOpen(true);
-    setViewLoading(true);
+  }, [selectedYear, selectedMonth, selectedDate]);
 
-    const response = await axios.post(
-      `${apiUrl}/auth/get_log_by_id`,
-      {
-        log_id: String(logId),
-      },
-      {
-        headers: getAuthHeaders(),
+  const getLogById = async (logId) => {
+    try {
+      setSelectedLog(null);
+      setViewModalOpen(true);
+      setViewLoading(true);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/get_log_by_id`,
+        {
+          log_id: String(logId),
+        },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (response?.data?.success) {
+        setSelectedLog(response?.data?.data || null);
+      } else {
+        closeViewModal();
       }
-    );
-
-    if (response?.data?.success) {
-      setSelectedLog(response?.data?.data || null);
-    } else {
+    } catch (error) {
+      console.error(error);
       closeViewModal();
+    } finally {
+      setViewLoading(false);
     }
-  } catch (error) {
-    console.error(error);
-    closeViewModal();
-  } finally {
-    setViewLoading(false);
-  }
-};
+  };
   const summary = dashboardData?.summary || {};
 
   const metrics = [
     {
-        label: "Engineers",
-        value: summary.total_employee || 0,
-        icon: <UsersIcon />,
-        permissionName: "Employee Management",
-      },
-      {
-        label: "Customers",
-        value: summary.total_customers || 0,
-        icon: <UsersIcon />,
-        permissionName: "Customer Management",
-      },
+      label: "Engineers",
+      value: summary.total_employee || 0,
+      icon: <UsersIcon />,
+      permissionName: "Employee Management",
+    },
+    {
+      label: "Customers",
+      value: summary.total_customers || 0,
+      icon: <UsersIcon />,
+      permissionName: "Customer Management",
+    },
     {
       label: "Total Buildings",
       value: loading ? "..." : summary.total_buildings || 0,
@@ -321,19 +355,19 @@ const getLogById = async (logId) => {
       label: "Total Logs",
       value: loading ? "..." : summary.total_logs || 0,
       icon: <LogIcon />,
-       permissionName: "Log Management",
-    },{
-        label: "Today Logs",
-        value: summary.today_logs || 0,
-        icon: <LogIcon />,
-        permissionName: "Log Management",
-      },
-     {
-        label: "System",
-        value: summary.total_components || 0,
-        icon: <ComponentIcon />,
-         permissionName: "System Management",
-      },
+      permissionName: "Log Management",
+    }, {
+      label: "Today Logs",
+      value: summary.today_logs || 0,
+      icon: <LogIcon />,
+      permissionName: "Log Management",
+    },
+    {
+      label: "System",
+      value: summary.total_components || 0,
+      icon: <ComponentIcon />,
+      permissionName: "System Management",
+    },
   ];
 
   const monthlyLogsData = MONTHS.map((month) => {
@@ -344,76 +378,128 @@ const getLogById = async (logId) => {
     return found ? Number(found.count) : 0;
   });
 
+  const dailyLogs = dashboardData?.daily_logs || [];
+
+  const chartLabels = dailyLogs.map((item) => item.day);
+
+  const chartData = dailyLogs.map((item) => Number(item.count));
+
+
+
+  const maxValue = Math.max(...chartData, 10);
+  const yMax = Math.ceil(maxValue / 10) * 10;
+
   const barData = {
-    labels: MONTHS,
+    labels: chartLabels,
     datasets: [
       {
         label: "Logs",
-        data: monthlyLogsData,
-        backgroundColor: "#1570ef",
-        hoverBackgroundColor: "#528bff",
-        borderRadius: 6,
-        barPercentage: 0.42,
-        categoryPercentage: 0.65,
+        data: chartData,
+        backgroundColor: "#465fff",
+        hoverBackgroundColor: "#78a9ff",
+        borderRadius: {
+          topLeft: 5,
+          topRight: 5,
+          bottomLeft: 0,
+          bottomRight: 0,
+        },
+        borderSkipped: "bottom",
+        barPercentage: 0.7,
+        categoryPercentage: 0.9,
       },
     ],
   };
 
-  const chartOptions = {
+  const barOptions = {
     responsive: true,
     maintainAspectRatio: false,
-
     interaction: {
-      mode: "index",
       intersect: false,
+      mode: "index",
     },
-
+    animation: {
+      duration: 1200,
+      easing: "easeOutQuart",
+      delay: (context) => {
+        if (context.type !== "data" || context.mode !== "default") {
+          return 0;
+        }
+        return context.dataIndex * 120;
+      },
+    },
     plugins: {
       legend: {
         display: false,
       },
-
+      hoverBackgroundPlugin: {
+        bgColor: darkMode ? "rgba(75,85,99,0.55)" : "rgba(229,231,235,0.9)",
+      },
       tooltip: {
         enabled: true,
         backgroundColor: darkMode ? "#374151" : "#ffffff",
-        titleColor: darkMode ? "#ffffff" : "#344054",
-        bodyColor: darkMode ? "#ffffff" : "#344054",
+        titleColor: darkMode ? "#ffffff" : "#111827",
+        bodyColor: darkMode ? "#ffffff" : "#111827",
         borderColor: darkMode ? "#4b5563" : "#e5e7eb",
         borderWidth: 1,
-        padding: 12,
+        padding: 10,
+        cornerRadius: 8,
         displayColors: true,
-        caretSize: 6,
-        cornerRadius: 6,
+        usePointStyle: true,
+        boxWidth: 8,
+        boxHeight: 8,
+        boxPadding: 8,
+        caretSize: 0,
         callbacks: {
-          title: () => "",
-          label: (context) => `Logs: ${context.raw}`,
+          title: function () {
+            return "";
+          },
+          labelPointStyle: function () {
+            return {
+              pointStyle: "circle",
+              rotation: 0,
+            };
+          },
+          labelColor: function () {
+            return {
+              backgroundColor: "#465fff",
+              borderColor: "#465fff",
+              borderWidth: 0,
+            };
+          },
+          label: function (context) {
+            return `Logs: ${context.raw}`;
+          },
         },
       },
     },
-
     scales: {
       x: {
         grid: {
           display: false,
+          drawBorder: false,
         },
         border: {
           display: false,
         },
         ticks: {
           color: tickColor,
+          maxRotation: 0,
+          minRotation: 0,
+          autoSkip: false,
           font: {
+            family: "Outfit",
             size: 11,
           },
         },
       },
-
       y: {
         min: 0,
-        max: 400,
+        max: yMax,
         ticks: {
-          stepSize: 100,
+          stepSize: Math.max(1, Math.ceil(yMax / 5)),
           color: tickColor,
           font: {
+            family: "Outfit",
             size: 11,
           },
           callback: function (value) {
@@ -422,6 +508,7 @@ const getLogById = async (logId) => {
         },
         grid: {
           color: gridColor,
+          drawBorder: false,
         },
         border: {
           display: false,
@@ -430,20 +517,105 @@ const getLogById = async (logId) => {
     },
   };
 
-  const logTypes = dashboardData?.log_types || [];
+  // const chartOptions = {
+  //   responsive: true,
+  //   maintainAspectRatio: false,
+
+  //   interaction: {
+  //     mode: "index",
+  //     intersect: false,
+  //   },
+
+  //   plugins: {
+  //     legend: {
+  //       display: false,
+  //     },
+
+  //     tooltip: {
+  //       enabled: true,
+  //       backgroundColor: darkMode ? "#374151" : "#ffffff",
+  //       titleColor: darkMode ? "#ffffff" : "#344054",
+  //       bodyColor: darkMode ? "#ffffff" : "#344054",
+  //       borderColor: darkMode ? "#4b5563" : "#e5e7eb",
+  //       borderWidth: 1,
+  //       padding: 12,
+  //       displayColors: true,
+  //       caretSize: 6,
+  //       cornerRadius: 6,
+  //       callbacks: {
+  //         title: () => "",
+  //         label: (context) => `Logs: ${context.raw}`,
+  //       },
+  //     },
+  //   },
+
+  //   scales: {
+  //     x: {
+  //       grid: {
+  //         display: false,
+  //       },
+  //       border: {
+  //         display: false,
+  //       },
+  //       ticks: {
+  //         color: tickColor,
+  //         font: {
+  //           size: 11,
+  //         },
+  //       },
+  //     },
+
+  //     y: {
+  //       min: 0,
+  //       max: 400,
+  //       ticks: {
+  //         stepSize: 100,
+  //         color: tickColor,
+  //         font: {
+  //           size: 11,
+  //         },
+  //         callback: function (value) {
+  //           return value;
+  //         },
+  //       },
+  //       grid: {
+  //         color: gridColor,
+  //       },
+  //       border: {
+  //         display: false,
+  //       },
+  //     },
+  //   },
+  // };
+
+  const chartColors = [
+    "#465FFF",
+    "#11C26D",
+    "#F3A754",
+    "#F96868",
+    "#62A9EB",
+    "#9B5CFF",
+    "#00C2FF",
+    "#FF6384",
+  ];
+
+  const purposeOfVisit = dashboardData?.purpose_of_visit || [];
 
   const donutData = {
-    labels: logTypes.length
-      ? logTypes.map((item) => item.type_name || "-")
-      : ["No Logs"],
+    labels: purposeOfVisit.length
+      ? purposeOfVisit.map((item) => item.type_name)
+      : ["No Data"],
+
     datasets: [
       {
-        data: logTypes.length
-          ? logTypes.map((item) => Number(item.count))
+        data: purposeOfVisit.length
+          ? purposeOfVisit.map((item) => Number(item.count))
           : [1],
-        backgroundColor: logTypes.length
-          ? ["#55acee", "#ffa85c", "#ff5d67", "#10c875", "#465fff", "#9b5cff"]
-          : ["#e5e7eb"],
+
+        backgroundColor: purposeOfVisit.length
+          ? purposeOfVisit.map((_, index) => chartColors[index % chartColors.length])
+          : ["#465FFF"], // Blue when no data
+
         borderWidth: 0,
       },
     ],
@@ -458,20 +630,25 @@ const getLogById = async (logId) => {
         position: "bottom",
         labels: {
           color: tickColor,
-          padding: 14,
-          usePointStyle: false,
-          boxWidth: 38,
+          font: {
+            family: "Outfit",
+            size: 12,
+          },
+          padding: 12,
+          boxWidth: 40,
           boxHeight: 12,
         },
       },
     },
   };
+
+
   const hasReadPermission = (permissionName) => {
     //if (authUser?.role_id === 1) return true;
-    
-const permissions = Array.isArray(authUser?.permissions)
-    ? authUser.permissions
-    : [];
+
+    const permissions = Array.isArray(authUser?.permissions)
+      ? authUser.permissions
+      : [];
 
     return permissions?.some(
       (p) =>
@@ -497,301 +674,311 @@ const permissions = Array.isArray(authUser?.permissions)
 
   return (
     <>
-    <PeriodFilter
-  selectedPeriod={selectedPeriod}
-  setSelectedPeriod={setSelectedPeriod}
-/>
-    <div className="w-full overflow-hidden">
-      <div className="grid grid-cols-12 gap-4 md:gap-6">
-        {/* LEFT SIDE */}
-        <div className="col-span-12 xl:col-span-7">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {metrics
-             .filter((m) => hasReadPermission(m.permissionName))
-            .map((m) => (
-              <div key={m.label} className="card rounded-2xl p-6">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-white">
-                  {m.icon}
-                </div>
+      {/* <PeriodFilter
+        selectedPeriod={selectedPeriod}
+        setSelectedPeriod={setSelectedPeriod}
+      /> */}
 
-                <span className="mt-4 block text-sm font-medium text-gray-500 dark:text-gray-400">
-                  {m.label}
-                </span>
+      <DashboardFilters
+        selectedYear={selectedYear}
+        setSelectedYear={setSelectedYear}
+        selectedMonth={selectedMonth}
+        setSelectedMonth={setSelectedMonth}
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+      />
 
-                <h4 className="mt-1 text-3xl font-bold text-gray-800 dark:text-white/90">
-                  {m.value}
-                </h4>
+      <div className="w-full overflow-hidden">
+        <div className="grid grid-cols-12 gap-4 md:gap-6">
+          {/* LEFT SIDE */}
+          <div className="col-span-12 xl:col-span-7">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {metrics
+                .filter((m) => hasReadPermission(m.permissionName))
+                .map((m) => (
+                  <div key={m.label} className="card rounded-2xl p-6">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-white">
+                      {m.icon}
+                    </div>
+
+                    <span className="mt-4 block text-sm font-medium text-gray-500 dark:text-gray-400">
+                      {m.label}
+                    </span>
+
+                    <h4 className="mt-1 text-3xl font-bold text-gray-800 dark:text-white/90">
+                      {m.value}
+                    </h4>
+                  </div>
+                ))}
+            </div>
+
+            <div className="card mt-6 rounded-2xl p-4 sm:p-6">
+              <div className="mb-5 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                  Daily Logs
+                </h3>
+
+                {/* <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                  ⋮
+                </button> */}
               </div>
-            ))}
+
+              <div className="h-[220px] w-full sm:h-[260px] xl:h-[180px]">
+                <Bar data={barData} options={barOptions} />
+              </div>
+            </div>
           </div>
 
-          <div className="card mt-6 rounded-2xl p-4 sm:p-6">
-            <div className="mb-5 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                Monthly Logs
+          {/* RIGHT SIDE */}
+          <div className="col-span-12 xl:col-span-5">
+            <div className="card h-full rounded-2xl p-4 sm:p-6">
+              <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90">
+                Purpose of Visit
               </h3>
 
-              <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                ⋮
-              </button>
-            </div>
-
-            <div className="h-[220px] w-full sm:h-[260px] xl:h-[180px]">
-              <Bar data={barData} options={chartOptions} />
+              <div className="h-[380px]">
+                <Doughnut data={donutData} options={donutOptions} />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* RIGHT SIDE */}
-        <div className="col-span-12 xl:col-span-5">
-          <div className="card h-full rounded-2xl p-4 sm:p-6">
-            <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90">
-              Purpose of Visit
-            </h3>
+          {/* RECENT LOG TABLE */}
+          <div className="col-span-12">
+            <div className="card overflow-hidden rounded-xl">
+              <div className="m-4 sm:m-6">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                  Recent Logs
+                </h3>
+              </div>
 
-            <div className="h-[380px]">
-              <Doughnut data={donutData} options={donutOptions} />
-            </div>
-          </div>
-        </div>
+              <div className="w-full overflow-x-auto">
+                <table className="min-w-[900px] w-full border border-gray-200 text-left text-sm dark:border-gray-800">
+                  <thead>
+                    <tr className="border-b border-gray-100 dark:border-gray-800">
+                      {[
+                        ["id", "Log ID"],
+                        ["type", "Purpose of Visit"],
+                        ["engineer", "Engineer"],
+                        ["customer", "Customer"],
+                        ["building", "Building"],
+                        ["date", "Date"],
+                      ].map(([k, label]) => (
+                        <th
+                          key={k}
+                          className="table-th cursor-pointer whitespace-nowrap"
+                          onClick={() => handleSort(k)}
+                        >
+                          {label}
+                        </th>
+                      ))}
 
-        {/* RECENT LOG TABLE */}
-        <div className="col-span-12">
-          <div className="card overflow-hidden rounded-xl">
-            <div className="m-4 sm:m-6">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                Recent Logs
-              </h3>
-            </div>
+                      <th className="table-th whitespace-nowrap">Action</th>
+                    </tr>
+                  </thead>
 
-            <div className="w-full overflow-x-auto">
-              <table className="min-w-[900px] w-full border border-gray-200 text-left text-sm dark:border-gray-800">
-                <thead>
-                  <tr className="border-b border-gray-100 dark:border-gray-800">
-                    {[
-                      ["id", "Log ID"],
-                      ["type", "Purpose of Visit"],
-                      ["engineer", "Engineer"],
-                      ["customer", "Customer"],
-                      ["building", "Building"],
-                      ["date", "Date"],
-                    ].map(([k, label]) => (
-                      <th
-                        key={k}
-                        className="table-th cursor-pointer whitespace-nowrap"
-                        onClick={() => handleSort(k)}
-                      >
-                        {label}
-                      </th>
-                    ))}
+                  <tbody>
+                    {logs.length > 0 ? (
+                      logs.map((row) => (
+                        <tr key={row.log_id || row.id} className="table-row">
+                          <td onClick={() => getLogById(row.log_id)} className="px-6 py-4 text-sm cursor-pointer whitespace-nowrap font-medium text-blue-600 ">
 
-                    <th className="table-th whitespace-nowrap">Action</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {logs.length > 0 ? (
-                    logs.map((row) => (
-                      <tr key={row.log_id || row.id} className="table-row">
-        <td   onClick={() => getLogById(row.log_id)} className="px-6 py-4 text-sm cursor-pointer whitespace-nowrap font-medium text-blue-600 ">
-                      
                             {row.id}
-                        </td>
-                        <td className="table-td whitespace-nowrap">
-                          {row.type}
-                        </td>
-                        <td className="table-td whitespace-nowrap">
-                          {row.engineer}
-                        </td>
-                        <td className="table-td whitespace-nowrap">
-                          {row.customer}
-                        </td>
-                        <td className="table-td whitespace-nowrap">
-                          {row.building}
-                        </td>
-                        <td className="table-td whitespace-nowrap">
-                          {row.date}
-                        </td>
-                        <td className="table-td whitespace-nowrap">
-                         <button
-  type="button"
-  onClick={() => getLogById(row.log_id)}
-  className="text-green-500 hover:text-green-700"
->
-  <EyeIcon />
-</button>
+                          </td>
+                          <td className="table-td whitespace-nowrap">
+                            {row.type}
+                          </td>
+                          <td className="table-td whitespace-nowrap">
+                            {row.engineer}
+                          </td>
+                          <td className="table-td whitespace-nowrap">
+                            {row.customer}
+                          </td>
+                          <td className="table-td whitespace-nowrap">
+                            {row.building}
+                          </td>
+                          <td className="table-td whitespace-nowrap">
+                            {row.date}
+                          </td>
+                          <td className="table-td whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => getLogById(row.log_id)}
+                              className="text-green-500 hover:text-green-700"
+                            >
+                              <EyeIcon />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400"
+                        >
+                          {loading ? "Loading..." : "No recent logs found"}
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400"
-                      >
-                        {loading ? "Loading..." : "No recent logs found"}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-            <div className="block border-t border-gray-100 px-4 py-3 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400 sm:hidden">
-              Swipe left/right to view full table.
+              <div className="block border-t border-gray-100 px-4 py-3 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400 sm:hidden">
+                Swipe left/right to view full table.
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
       <PopupModal
-            open={viewModalOpen}
-            onClose={closeViewModal}
-            maxWidth="max-w-[900px]"
-            className="px-3 py-4 sm:px-4 sm:py-6"
-            bodyClassName="max-h-[92vh] p-5 sm:p-8"
-          >
-            <button
-              type="button"
-              onClick={closeViewModal}
-              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl leading-none text-gray-400 transition hover:bg-gray-200 hover:text-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
-            >
-              ×
-            </button>
-    
-            <div className="mb-6 pr-12">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
-                View Log Details
-              </h2>
-              <div className="mt-1 flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-    
-                  {selectedLog?.log_id
-                    ? <>
-                      <span className="font-semibold">LOG ID :</span> {formatLogIdWithPrefix(selectedLog)}
-                    </>
-                    : "Loading log information"
-                  }
-    
-                </span>
-                <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-    
-                  {selectedLog?.entry_date
-                    ? <>
-                      <span className="font-semibold">Create Date :</span> {formatDateTime(selectedLog?.entry_date)}
-                    </>
-                    : "Loading log information"
-                  }
-    
-                </span>
-                <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-    
-                  {selectedLog?.entry_on_place
-                    ? <>
-                      <span className="font-semibold">Generate Via:</span> {selectedLog?.entry_on_place == "2" ? "Manual Search" : (selectedLog?.entry_on_place == "1") ? "scanner" : "Admin"}
-                    </>
-                    : "Loading log information"
-                  }
-    
-                </span>
+        open={viewModalOpen}
+        onClose={closeViewModal}
+        maxWidth="max-w-[900px]"
+        className="px-3 py-4 sm:px-4 sm:py-6"
+        bodyClassName="max-h-[92vh] p-5 sm:p-8"
+      >
+        <button
+          type="button"
+          onClick={closeViewModal}
+          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl leading-none text-gray-400 transition hover:bg-gray-200 hover:text-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
+        >
+          ×
+        </button>
+
+        <div className="mb-6 pr-12">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+            View Log Details
+          </h2>
+          <div className="mt-1 flex justify-between text-sm text-gray-500 dark:text-gray-400">
+            <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+
+              {selectedLog?.log_id
+                ? <>
+                  <span className="font-semibold">LOG ID :</span> {formatLogIdWithPrefix(selectedLog)}
+                </>
+                : "Loading log information"
+              }
+
+            </span>
+            <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+
+              {selectedLog?.entry_date
+                ? <>
+                  <span className="font-semibold">Create Date :</span> {formatDateTime(selectedLog?.entry_date)}
+                </>
+                : "Loading log information"
+              }
+
+            </span>
+            <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+
+              {selectedLog?.entry_on_place
+                ? <>
+                  <span className="font-semibold">Generate Via:</span> {selectedLog?.entry_on_place == "2" ? "Manual Search" : (selectedLog?.entry_on_place == "1") ? "scanner" : "Admin"}
+                </>
+                : "Loading log information"
+              }
+
+            </span>
+          </div>
+        </div>
+
+        {viewLoading ? (
+          <div className="py-10 text-center text-gray-500 dark:text-gray-400">
+            Loading log details...
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6">
+              <h3 className="mb-5 text-base font-semibold text-gray-900 dark:text-white">
+                Customer & Building Information
+              </h3>
+
+              <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
+
+                {
+                  roleId != 3 &&
+                  <Info
+                    label="Customer Name"
+                    value={selectedLog?.customer_name}
+                  />
+                }
+
+                <Info
+                  label="Building Name"
+                  value={selectedLog?.building_name}
+                />
+                <Info label="Postcode" value={selectedLog?.postcode} />
+                <Info label="Country" value={selectedLog?.country_name} />
+                <Info label="State" value={selectedLog?.state_name} />
+                <Info label="City" value={selectedLog?.city_name} />
+                <Info label="Landmark" value={selectedLog?.landmark} />
+
+
+                <Info label="Address" value={selectedLog?.address} />
+
               </div>
             </div>
-    
-            {viewLoading ? (
-              <div className="py-10 text-center text-gray-500 dark:text-gray-400">
-                Loading log details...
-              </div>
+
+            {selectedLog?.maintenance_entries?.length > 0 ? (
+              selectedLog.maintenance_entries.map((entry) => (
+                <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6">
+                  <h3 className="mb-5 text-base font-semibold text-gray-900 dark:text-white">
+                    {entry?.component_name}
+                  </h3>
+
+                  <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
+
+                    <Info
+                      label="Purpose of Visit"
+                      value={entry?.maintenance_cycle_name}
+                    />
+                    <Info
+                      label="Date"
+                      value={formatDate(entry?.entry_date)}
+                    />
+                    <Info
+                      label="start Time"
+                      value={`${formatOnlyTime(entry?.start_time)} `}
+                    />
+                    <Info
+                      label="End Time"
+                      value={`${formatOnlyTime(
+                        entry?.finish_time,
+                      )} `}
+                    />
+                    <Info label="Remidial Action Taken" value={entry?.remark || "-"} />
+                  </div>
+                </div>
+
+              ))
             ) : (
-              <div className="space-y-6">
-                <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6">
-                  <h3 className="mb-5 text-base font-semibold text-gray-900 dark:text-white">
-                    Customer & Building Information
-                  </h3>
-    
-                  <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
-                   
-                   {
-                    roleId != 3 &&
-                    <Info
-                      label="Customer Name"
-                      value={selectedLog?.customer_name}
-                    />
-                   }
-    
-                    <Info
-                      label="Building Name"
-                      value={selectedLog?.building_name}
-                    />
-                    <Info label="Postcode" value={selectedLog?.postcode} />
-                    <Info label="Country" value={selectedLog?.country_name} />
-                    <Info label="State" value={selectedLog?.state_name} />
-                    <Info label="City" value={selectedLog?.city_name} />
-                    <Info label="Landmark" value={selectedLog?.landmark} />
-    
-    
-                    <Info label="Address" value={selectedLog?.address} />
-    
-                  </div>
-                </div>
-    
-                {selectedLog?.maintenance_entries?.length > 0 ? (
-                  selectedLog.maintenance_entries.map((entry) => (
-                    <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6">
-                      <h3 className="mb-5 text-base font-semibold text-gray-900 dark:text-white">
-                        {entry?.component_name}
-                      </h3>
-    
-                      <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
-    
-                        <Info
-                          label="Purpose of Visit"
-                          value={entry?.maintenance_cycle_name}
-                        />
-                        <Info
-                          label="Date"
-                          value={formatDate(entry?.entry_date)}
-                        />
-                        <Info
-                          label="start Time"
-                          value={`${formatOnlyTime(entry?.start_time)} `}
-                        />
-                        <Info
-                          label="End Time"
-                          value={`${formatOnlyTime(
-                            entry?.finish_time,
-                          )} `}
-                        />
-                        <Info label="Remidial Action Taken" value={entry?.remark || "-"} />
-                      </div>
-                    </div>
-    
-                  ))
-                ) : (
-                  <div className="rounded-2xl border border-gray-200 p-4 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                    No maintenance entries found
-                  </div>
-                )}
-    
-    
-                <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6">
-                  <h3 className="mb-5 text-base font-semibold text-gray-900 dark:text-white">
-                    Engineer Information
-                  </h3>
-    
-                  <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
-                    <Info
-                      label="Engineer Name"
-                      value={selectedLog?.created_by_name}
-                    />
-                    <Info
-                      label="Engineer Email"
-                      value={selectedLog?.created_by_email}
-                    />
-                  </div>
-                </div>
+              <div className="rounded-2xl border border-gray-200 p-4 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                No maintenance entries found
               </div>
             )}
-          </PopupModal>
+
+
+            <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6">
+              <h3 className="mb-5 text-base font-semibold text-gray-900 dark:text-white">
+                Engineer Information
+              </h3>
+
+              <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
+                <Info
+                  label="Engineer Name"
+                  value={selectedLog?.created_by_name}
+                />
+                <Info
+                  label="Engineer Email"
+                  value={selectedLog?.created_by_email}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </PopupModal>
     </>
   );
 }

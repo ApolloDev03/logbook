@@ -236,7 +236,7 @@ export default function Dashboard() {
     new Date().getFullYear()
   );
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(null);
 
   const getNearestSunday = (date) => {
     if (!date) return "";
@@ -401,35 +401,35 @@ export default function Dashboard() {
 
   const dailyLogs = dashboardData?.daily_logs || [];
 
-const chartLabels = dailyLogs.map((item) => item.day);
+  const chartLabels = dailyLogs.map((item) => item.day);
 
-const chartData = dailyLogs.map((item) => Number(item.count));
+  const chartData = dailyLogs.map((item) => Number(item.count));
 
 
 
   const maxValue = Math.max(...chartData, 10);
-const yMax = Math.ceil(maxValue / 10) * 10;
+  const yMax = Math.ceil(maxValue / 10) * 10;
 
   const barData = {
-  labels: chartLabels,
-  datasets: [
-    {
-      label: "Logs",
-      data: chartData,
-      backgroundColor: "#465fff",
-      hoverBackgroundColor: "#78a9ff",
-      borderRadius: {
-        topLeft: 5,
-        topRight: 5,
-        bottomLeft: 0,
-        bottomRight: 0,
+    labels: chartLabels,
+    datasets: [
+      {
+        label: "Logs",
+        data: chartData,
+        backgroundColor: "#465fff",
+        hoverBackgroundColor: "#78a9ff",
+        borderRadius: {
+          topLeft: 5,
+          topRight: 5,
+          bottomLeft: 0,
+          bottomRight: 0,
+        },
+        borderSkipped: "bottom",
+        barPercentage: 0.7,
+        categoryPercentage: 0.9,
       },
-      borderSkipped: "bottom",
-      barPercentage: 0.7,
-      categoryPercentage: 0.9,
-    },
-  ],
-};
+    ],
+  };
 
   const barOptions = {
     responsive: true,

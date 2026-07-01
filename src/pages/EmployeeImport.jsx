@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Breadcrumb from "../components/ui/Breadcrumb";
 import { apiUrl } from "../config";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const getToken = () => {
   return localStorage.getItem("auth_token") || "";
@@ -30,12 +31,53 @@ export default function EmployeeImport() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!file) {
+      toast.error("Please select a file.");
       return;
     }
 
-    // API Call Here
+    try {
+      const formData = new FormData();
+      formData.append("csv_file", file);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/import_employees_csv`,
+        formData,
+        {
+          headers: {
+            Authorization: getToken(),
+            token: getToken(),
+            "x-access-token": getToken(),
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+
+        console.log("Import Result:", response.data.results);
+
+        // Optional: Clear selected file
+        setFile(null);
+
+        // Reset file input
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput) {
+          fileInput.value = "";
+        }
+
+        // Optional: Navigate after success
+        // navigate("/employee");
+      } else {
+        toast.error(response.data.message || "Import failed.");
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to import employees."
+      );
+    }
   };
 
   const handleDownloadTemplate = async () => {
