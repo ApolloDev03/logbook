@@ -32,6 +32,7 @@ import "react-date-range/dist/theme/default.css";
 
 
 import { format } from "date-fns";
+import { IoTrashBinSharp } from "react-icons/io5";
 const getToken = () => localStorage.getItem("auth_token") || "";
 
 const getAuthHeaders = () => {
@@ -136,7 +137,7 @@ const ClockIcon = () => (
 function WatchTimePicker({ label, value, onChange, minTime = "" }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState("hour");
-  
+
 
   const baseTime = value || minTime || "09:00";
 
@@ -341,11 +342,10 @@ function WatchTimePicker({ label, value, onChange, minTime = "" }) {
               <button
                 type="button"
                 onClick={() => setStep("hour")}
-                className={`rounded-xl px-5 py-2 text-2xl font-bold transition ${
-                  step === "hour"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white"
-                }`}
+                className={`rounded-xl px-5 py-2 text-2xl font-bold transition ${step === "hour"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white"
+                  }`}
               >
                 {String(displayHour).padStart(2, "0")}
               </button>
@@ -357,11 +357,10 @@ function WatchTimePicker({ label, value, onChange, minTime = "" }) {
               <button
                 type="button"
                 onClick={() => setStep("minute")}
-                className={`rounded-xl px-5 py-2 text-2xl font-bold transition ${
-                  step === "minute"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white"
-                }`}
+                className={`rounded-xl px-5 py-2 text-2xl font-bold transition ${step === "minute"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white"
+                  }`}
               >
                 {String(currentMinute).padStart(2, "0")}
               </button>
@@ -371,13 +370,12 @@ function WatchTimePicker({ label, value, onChange, minTime = "" }) {
                   type="button"
                   disabled={isAmPmDisabled("AM")}
                   onClick={() => setAmPm("AM")}
-                  className={`px-3 py-1 text-sm font-semibold transition ${
-                    !isPM
-                      ? "bg-blue-600 text-white"
-                      : isAmPmDisabled("AM")
-                        ? "cursor-not-allowed bg-gray-100 text-gray-300 dark:bg-gray-800 dark:text-gray-600"
-                        : "bg-white text-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                  }`}
+                  className={`px-3 py-1 text-sm font-semibold transition ${!isPM
+                    ? "bg-blue-600 text-white"
+                    : isAmPmDisabled("AM")
+                      ? "cursor-not-allowed bg-gray-100 text-gray-300 dark:bg-gray-800 dark:text-gray-600"
+                      : "bg-white text-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                    }`}
                 >
                   AM
                 </button>
@@ -386,13 +384,12 @@ function WatchTimePicker({ label, value, onChange, minTime = "" }) {
                   type="button"
                   disabled={isAmPmDisabled("PM")}
                   onClick={() => setAmPm("PM")}
-                  className={`px-3 py-1 text-sm font-semibold transition ${
-                    isPM
-                      ? "bg-blue-600 text-white"
-                      : isAmPmDisabled("PM")
-                        ? "cursor-not-allowed bg-gray-100 text-gray-300 dark:bg-gray-800 dark:text-gray-600"
-                        : "bg-white text-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                  }`}
+                  className={`px-3 py-1 text-sm font-semibold transition ${isPM
+                    ? "bg-blue-600 text-white"
+                    : isAmPmDisabled("PM")
+                      ? "cursor-not-allowed bg-gray-100 text-gray-300 dark:bg-gray-800 dark:text-gray-600"
+                      : "bg-white text-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                    }`}
                 >
                   PM
                 </button>
@@ -414,13 +411,12 @@ function WatchTimePicker({ label, value, onChange, minTime = "" }) {
                       disabled={disabled}
                       onClick={() => setHour(hour)}
                       style={getPosition(index, 12)}
-                      className={`absolute flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold transition ${
-                        active
-                          ? "bg-blue-600 text-white shadow-lg"
-                          : disabled
-                            ? "cursor-not-allowed bg-gray-100 text-gray-300 shadow-none dark:bg-gray-700 dark:text-gray-500"
-                            : "bg-white text-gray-800 shadow-sm hover:bg-blue-100 dark:bg-gray-900 dark:text-white"
-                      }`}
+                      className={`absolute flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold transition ${active
+                        ? "bg-blue-600 text-white shadow-lg"
+                        : disabled
+                          ? "cursor-not-allowed bg-gray-100 text-gray-300 shadow-none dark:bg-gray-700 dark:text-gray-500"
+                          : "bg-white text-gray-800 shadow-sm hover:bg-blue-100 dark:bg-gray-900 dark:text-white"
+                        }`}
                     >
                       {hour}
                     </button>
@@ -439,13 +435,12 @@ function WatchTimePicker({ label, value, onChange, minTime = "" }) {
                       disabled={disabled}
                       onClick={() => setMinute(minute)}
                       style={getPosition(index, 12)}
-                      className={`absolute flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold transition ${
-                        active
-                          ? "bg-blue-600 text-white shadow-lg"
-                          : disabled
-                            ? "cursor-not-allowed bg-gray-100 text-gray-300 shadow-none dark:bg-gray-700 dark:text-gray-500"
-                            : "bg-white text-gray-800 shadow-sm hover:bg-blue-100 dark:bg-gray-900 dark:text-white"
-                      }`}
+                      className={`absolute flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold transition ${active
+                        ? "bg-blue-600 text-white shadow-lg"
+                        : disabled
+                          ? "cursor-not-allowed bg-gray-100 text-gray-300 shadow-none dark:bg-gray-700 dark:text-gray-500"
+                          : "bg-white text-gray-800 shadow-sm hover:bg-blue-100 dark:bg-gray-900 dark:text-white"
+                        }`}
                     >
                       {String(minute).padStart(2, "0")}
                     </button>
@@ -557,8 +552,8 @@ function UniqueDatePicker({
         <CalendarIcon />
       </button>
 
-      {open && (  
-  <div className="absolute left-0 top-full z-[9999] mt-2 w-auto rounded-xl bg-white p-3 shadow-2xl dark:bg-gray-900">
+      {open && (
+        <div className="absolute left-0 top-full z-[9999] mt-2 w-auto rounded-xl bg-white p-3 shadow-2xl dark:bg-gray-900">
           <div className="single-date-responsive">
             <Calendar
               date={selectedDate || minimumDate}
@@ -589,7 +584,7 @@ function getCurrentTime() {
 }
 
 export default function CreateLog() {
-const navigate = useNavigate();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const [buildingList, setBuildingList] = useState([]);
@@ -609,32 +604,32 @@ const navigate = useNavigate();
   const [buildingLoading, setBuildingLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [entryOnPlace, setEntryOnPlace] = useState(0);
-const [errors, setErrors] = useState({
-  building: "",
-  rows: [],
-});
+  const [errors, setErrors] = useState({
+    building: "",
+    rows: [],
+  });
 
-//   const [startTime, setStartTime] = useState(getCurrentTime());
-// const [finishTime, setFinishTime] = useState("");
-  
- const emptyLogRow = () => ({
-  component: "",
-  maintenanceType: "2",
-  maintenanceCycle: "",
-  maintenanceDate: "",
-  device: "",
-  remark: "",
-  startTime: getCurrentTime(),
-  finishTime: "",
-});
+  //   const [startTime, setStartTime] = useState(getCurrentTime());
+  // const [finishTime, setFinishTime] = useState("");
 
-const [form, setForm] = useState({
-  buildingName: "",
-});
+  const emptyLogRow = () => ({
+    component: "",
+    maintenanceType: "2",
+    maintenanceCycle: "",
+    maintenanceDate: "",
+    device: "",
+    remark: "",
+    startTime: getCurrentTime(),
+    finishTime: "",
+  });
+
+  const [form, setForm] = useState({
+    buildingName: "",
+  });
 
 
 
-const [logRows, setLogRows] = useState([emptyLogRow()]);
+  const [logRows, setLogRows] = useState([emptyLogRow()]);
 
   useEffect(() => {
     loadInitialData();
@@ -642,69 +637,69 @@ const [logRows, setLogRows] = useState([emptyLogRow()]);
 
 
   const handleRowChange = (index, e) => {
-  const { name, value } = e.target;
+    const { name, value } = e.target;
 
-  setLogRows((prev) =>
-    prev.map((row, rowIndex) =>
-      rowIndex === index
-        ? {
+    setLogRows((prev) =>
+      prev.map((row, rowIndex) =>
+        rowIndex === index
+          ? {
             ...row,
             [name]: value,
             ...(name === "maintenanceType" ? { maintenanceCycle: "" } : {}),
           }
-        : row,
-    ),
-  );
-};
+          : row,
+      ),
+    );
+  };
 
-const handleRowDateChange = (index, e) => {
-  handleRowChange(index, e);
-};
+  const handleRowDateChange = (index, e) => {
+    handleRowChange(index, e);
+  };
 
-const handleRowStartTimeChange = (index, time) => {
-  setLogRows((prev) =>
-    prev.map((row, rowIndex) => {
-      if (rowIndex !== index) return row;
+  const handleRowStartTimeChange = (index, time) => {
+    setLogRows((prev) =>
+      prev.map((row, rowIndex) => {
+        if (rowIndex !== index) return row;
 
-      return {
-        ...row,
-        startTime: time,
-        finishTime:
-          time && row.finishTime && isTimeBefore(row.finishTime, time)
-            ? ""
-            : row.finishTime,
-      };
-    }),
-  );
-};
+        return {
+          ...row,
+          startTime: time,
+          finishTime:
+            time && row.finishTime && isTimeBefore(row.finishTime, time)
+              ? ""
+              : row.finishTime,
+        };
+      }),
+    );
+  };
 
-const handleRowFinishTimeChange = (index, time) => {
-  setLogRows((prev) =>
-    prev.map((row, rowIndex) => {
-      if (rowIndex !== index) return row;
+  const handleRowFinishTimeChange = (index, time) => {
+    setLogRows((prev) =>
+      prev.map((row, rowIndex) => {
+        if (rowIndex !== index) return row;
 
-      if (row.startTime && time && isTimeBefore(time, row.startTime)) {
-        return row;
-      }
+        if (row.startTime && time && isTimeBefore(time, row.startTime)) {
+          return row;
+        }
 
-      return {
-        ...row,
-        finishTime: time,
-      };
-    }),
-  );
-};
+        return {
+          ...row,
+          finishTime: time,
+        };
+      }),
+    );
+  };
 
-const addLogRow = () => {
-  setLogRows((prev) => [...prev, emptyLogRow()]);
-};
+  const addLogRow = () => {
+    setLogRows((prev) => [...prev, emptyLogRow()]);
+  };
 
-const removeLogRow = (index) => {
-  setLogRows((prev) => {
-    if (prev.length === 1) return prev;
-    return prev.filter((_, rowIndex) => rowIndex !== index);
-  });
-};
+  const removeLogRow = (index) => {
+    setLogRows((prev) => {
+      if (prev.length === 1) return prev;
+      return prev.filter((_, rowIndex) => rowIndex !== index);
+    });
+  };
 
   const setBuildingValue = (building, forceEntryOnPlace = null) => {
     const buildingInfo = {
@@ -827,91 +822,111 @@ const removeLogRow = (index) => {
   //     setBuildingLoading(false);
   //   }
   // };
-const loadInitialData = async () => {
-  try {
-    if (!getToken()) {
-      toast.error("Token not found. Please login again.");
-      return;
-    }
+  const loadInitialData = async () => {
+    try {
+      if (!getToken()) {
+        toast.error("Token not found. Please login again.");
+        return;
+      }
 
-    setDropdownLoading(true);
-    setBuildingLoading(true);
+      setDropdownLoading(true);
+      setBuildingLoading(true);
 
-    const payload = {
-      customer_id:
-        authUser.role_id === 3 ? authUser?.customer.customer_id : "",
-    };
+      const payload = {
+        customer_id:
+          authUser.role_id === 3 ? authUser?.customer.customer_id : "",
+      };
 
-    const [buildingRes, componentRes, maintenanceRes] = await Promise.all([
-      axios.post(`${apiUrl}/auth/buildingDropdown`, payload, {
-        headers: getAuthHeaders(),
-      }),
-      axios.post(
-        `${apiUrl}/auth/componentDropdownList`,
-        {},
-        {
+      const [buildingRes, componentRes, maintenanceRes] = await Promise.all([
+        axios.post(`${apiUrl}/auth/buildingDropdown`, payload, {
           headers: getAuthHeaders(),
-        },
-      ),
-      axios.post(
-        `${apiUrl}/auth/maintenance_type_dropdown_list`,
-        {},
-        {
-          headers: getAuthHeaders(),
-        },
-      ),
-    ]);
+        }),
+        axios.post(
+          `${apiUrl}/auth/componentDropdownList`,
+          {},
+          {
+            headers: getAuthHeaders(),
+          },
+        ),
+        axios.post(
+          `${apiUrl}/auth/maintenance_type_dropdown_list`,
+          {},
+          {
+            headers: getAuthHeaders(),
+          },
+        ),
+      ]);
 
-    const apiBuildings = buildingRes?.data?.success
-      ? buildingRes?.data?.data || []
-      : [];
+      const apiBuildings = buildingRes?.data?.success
+        ? buildingRes?.data?.data || []
+        : [];
 
-    setBuildingList(apiBuildings);
+      setBuildingList(apiBuildings);
 
-    if (componentRes?.data?.success) {
-      setComponentList(componentRes?.data?.data || []);
-    } else {
-      setComponentList([]);
-      toast.error(componentRes?.data?.message || "System list not found.");
-    }
+      const storedBuilding = getStoredEngineerBuilding();
 
-    if (maintenanceRes?.data?.success) {
-      setMaintenanceTypeList(maintenanceRes?.data?.data || []);
-    } else {
-      setMaintenanceTypeList([]);
+      if (storedBuilding?.id) {
+        const matchedBuilding = apiBuildings.find(
+          (item) =>
+            String(item.building_id || item.id) ===
+            String(storedBuilding.id)
+        );
+
+        if (matchedBuilding) {
+          setBuildingValue(
+            matchedBuilding,
+            storedBuilding.entry_on_place
+          );
+        }
+      }
+
+      if (componentRes?.data?.success) {
+        setComponentList(componentRes?.data?.data || []);
+      } else {
+        setComponentList([]);
+        toast.error(componentRes?.data?.message || "System list not found.");
+      }
+
+      if (maintenanceRes?.data?.success) {
+        setMaintenanceTypeList(maintenanceRes?.data?.data || []);
+      } else {
+        setMaintenanceTypeList([]);
+        toast.error(
+          maintenanceRes?.data?.message || "Maintenance type list not found.",
+        );
+      }
+
+      // ============================
+      // DON'T AUTO SELECT BUILDING
+      // ============================
+
+      // localStorage.removeItem("selectedEngineerBuilding");
+
+      // setSelectedBuilding({
+      //   id: "",
+      //   name: "",
+      // });
+
+      // setSelectedBuildingId("");
+      // setEntryOnPlace(0);
+
+      // setForm((prev) => ({
+      //   ...prev,
+      //   buildingName: "",
+      // }));
+
+
+    } catch (error) {
       toast.error(
-        maintenanceRes?.data?.message || "Maintenance type list not found.",
-      );
-    }
-
-    // ============================
-    // DON'T AUTO SELECT BUILDING
-    // ============================
-    localStorage.removeItem("selectedEngineerBuilding");
-
-    setSelectedBuilding({
-      id: "",
-      name: "",
-    });
-
-    setSelectedBuildingId("");
-    setEntryOnPlace(0);
-
-    setForm((prev) => ({
-      ...prev,
-      buildingName: "",
-    }));
-  } catch (error) {
-    toast.error(
-      error?.response?.data?.message ||
+        error?.response?.data?.message ||
         error?.response?.data?.error ||
         "Failed to load form data.",
-    );
-  } finally {
-    setDropdownLoading(false);
-    setBuildingLoading(false);
-  }
-};
+      );
+    } finally {
+      setDropdownLoading(false);
+      setBuildingLoading(false);
+    }
+  };
   function getTodayDate() {
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -922,9 +937,9 @@ const loadInitialData = async () => {
   }
 
   function getDateTime(date, time) {
-  if (!date || !time) return "";
-  return `${date} ${time}:00`;
-}
+    if (!date || !time) return "";
+    return `${date} ${time}:00`;
+  }
   const fetchMaintenanceCycles = async (typeId) => {
     if (!typeId) {
       setMaintenanceCycleList([]);
@@ -959,16 +974,16 @@ const loadInitialData = async () => {
       setMaintenanceCycleList([]);
       toast.error(
         error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          "Failed to load Purpose.",
+        error?.response?.data?.error ||
+        "Failed to load Purpose.",
       );
     } finally {
       setCycleLoading(false);
     }
   };
-   useEffect(() => {
+  useEffect(() => {
     fetchMaintenanceCycles('2'); // Runs immediately when the component mounts
-  }, []); 
+  }, []);
   const handleBuildingSelect = (e) => {
     const id = e.target.value;
     setSelectedBuildingId(id);
@@ -994,10 +1009,13 @@ const loadInitialData = async () => {
     );
 
     if (building) {
-      setBuildingValue(building);
+      setBuildingValue(
+        building,
+        storedBuilding.entry_on_place
+      );
     }
   };
- 
+
   // const handleChange = (e) => {
   //   const { name, value } = e.target;
 
@@ -1033,179 +1051,189 @@ const loadInitialData = async () => {
   //   setFinishTime(time);
   // };
   const resetForm = () => {
-  setSelectedBuilding({
-    id: "",
-    name: "",
-  });
-
-  setSelectedBuildingId("");
-  setEntryOnPlace(0);
-
-  localStorage.removeItem("selectedEngineerBuilding");
-
-  setForm({
-    buildingName: "",
-  });
-
-  setLogRows([emptyLogRow()]);
-};
-const validateForm = () => {
-  const newErrors = {
-    rows: [],
-  };
-
-  if (!selectedBuildingId) {
-    newErrors.building = "Building is required";
-  }
-
-  logRows.forEach((row, index) => {
-    newErrors.rows[index] = {};
-
-    if (!row.component) {
-      newErrors.rows[index].component = "System is required";
-    }
-
-    if (!row.maintenanceCycle) {
-      newErrors.rows[index].maintenanceCycle =
-        "Purpose of Visit is required";
-    }
-
-    if (!row.maintenanceDate) {
-      newErrors.rows[index].maintenanceDate = "Date is required";
-    }
-
-    if (!row.startTime) {
-      newErrors.rows[index].startTime = "Start Time is required";
-    }
-
-    if (!row.finishTime) {
-      newErrors.rows[index].finishTime = "Finish Time is required";
-    }
-
-    if (
-      row.startTime &&
-      row.finishTime &&
-      isTimeBefore(row.finishTime, row.startTime)
-    ) {
-      newErrors.rows[index].finishTime =
-        "Finish Time cannot be before Start Time";
-    }
-  });
-
-  setErrors(newErrors);
-
-  const hasRowErrors = newErrors.rows.some(
-    (row) => row && Object.keys(row).length > 0
-  );
-
-  if (newErrors.building || hasRowErrors) {
-    toast.error("Please fill all required fields.");
-    return false;
-  }
-
-  return true;
-};
-const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  if (!validateForm()) return;
-  if (!getToken()) {
-    toast.error("Token not found. Please login again.");
-    return;
-  }
-
-  if (!selectedBuildingId) {
-    toast.error("Please select building.");
-    return;
-  }
-
-  if (!form.buildingName.trim()) {
-    toast.error("Please enter building name.");
-    return;
-  }
-
-  for (let i = 0; i < logRows.length; i++) {
-    const row = logRows[i];
-    const rowNumber = i + 1;
-
-    if (!row.component) {
-      toast.error(`Please select system in row ${rowNumber}.`);
-      return;
-    }
-
-    if (!row.maintenanceCycle) {
-      toast.error(`Please select Purpose of Visit in row ${rowNumber}.`);
-      return;
-    }
-
-    if (!row.maintenanceDate) {
-      toast.error(`Please select date in row ${rowNumber}.`);
-      return;
-    }
-
-    if (!row.startTime) {
-      toast.error(`Please select start time in row ${rowNumber}.`);
-      return;
-    }
-
-    if (!row.finishTime) {
-      toast.error(`Please select finish time in row ${rowNumber}.`);
-      return;
-    }
-
-    if (isTimeBefore(row.finishTime, row.startTime)) {
-      toast.error(`Finish Time cannot be before Start Time in row ${rowNumber}.`);
-      return;
-    }
-  }
-
-  const storedBuilding = getStoredEngineerBuilding();
-
-  const finalEntryOnPlace =
-    storedBuilding?.id &&
-    String(storedBuilding.id) === String(selectedBuildingId)
-      ? Number(storedBuilding.entry_on_place || entryOnPlace || 0)
-      : Number(entryOnPlace || 0);
-
-  const payload = {
-    building_id: Number(selectedBuildingId),
-    building_name: form.buildingName,
-    entry_on_place: finalEntryOnPlace,
-    maintenance_entries: logRows.map((row) => ({
-      component_id: Number(row.component),
-      maintenance_type_id: 2,
-      start_time: getDateTime(row.maintenanceDate, row.startTime),
-      finish_time: getDateTime(row.maintenanceDate, row.finishTime),
-      remark: row.remark,
-      maintenance_type_cycle_id: Number(row.maintenanceCycle),
-      entry_date: row.maintenanceDate,
-      entry_on_place: finalEntryOnPlace,
-    })),
-  };
-
-  try {
-    setSubmitLoading(true);
-
-    const response = await axios.post(`${apiUrl}/auth/create_log`, payload, {
-      headers: getAuthHeaders(),
+    setSelectedBuilding({
+      id: "",
+      name: "",
     });
 
-    if (response?.data?.success) {
-      toast.success(response?.data?.message || "Log created successfully");
-      navigate("/logs");
-    } else {
-      toast.error(response?.data?.message || "Failed to create log.");
+    setSelectedBuildingId("");
+    setEntryOnPlace(0);
+
+    localStorage.removeItem("selectedEngineerBuilding");
+
+    setForm({
+      buildingName: "",
+    });
+
+    setLogRows([emptyLogRow()]);
+  };
+  const validateForm = () => {
+    const newErrors = {
+      rows: [],
+    };
+
+    if (!selectedBuildingId) {
+      newErrors.building = "Building is required";
     }
-  } catch (error) {
-    toast.error(
-      error?.response?.data?.message ||
+
+    logRows.forEach((row, index) => {
+      newErrors.rows[index] = {};
+
+      if (!row.component) {
+        newErrors.rows[index].component = "System is required";
+      }
+
+      if (!row.maintenanceCycle) {
+        newErrors.rows[index].maintenanceCycle =
+          "Purpose of Visit is required";
+      }
+
+      if (!row.maintenanceDate) {
+        newErrors.rows[index].maintenanceDate = "Date is required";
+      }
+
+      if (!row.startTime) {
+        newErrors.rows[index].startTime = "Start Time is required";
+      }
+
+      if (!row.finishTime) {
+        newErrors.rows[index].finishTime = "Finish Time is required";
+      }
+
+      if (
+        row.startTime &&
+        row.finishTime &&
+        isTimeBefore(row.finishTime, row.startTime)
+      ) {
+        newErrors.rows[index].finishTime =
+          "Finish Time cannot be before Start Time";
+      }
+    });
+
+    setErrors(newErrors);
+
+    const hasRowErrors = newErrors.rows.some(
+      (row) => row && Object.keys(row).length > 0
+    );
+
+    if (newErrors.building || hasRowErrors) {
+      toast.error("Please fill all required fields.");
+      return false;
+    }
+
+    return true;
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+    if (!getToken()) {
+      toast.error("Token not found. Please login again.");
+      return;
+    }
+
+    if (!selectedBuildingId) {
+      toast.error("Please select building.");
+      return;
+    }
+
+    if (!form.buildingName.trim()) {
+      toast.error("Please enter building name.");
+      return;
+    }
+
+    for (let i = 0; i < logRows.length; i++) {
+      const row = logRows[i];
+      const rowNumber = i + 1;
+
+      if (!row.component) {
+        toast.error(`Please select system in row ${rowNumber}.`);
+        return;
+      }
+
+      if (!row.maintenanceCycle) {
+        toast.error(`Please select Purpose of Visit in row ${rowNumber}.`);
+        return;
+      }
+
+      if (!row.maintenanceDate) {
+        toast.error(`Please select date in row ${rowNumber}.`);
+        return;
+      }
+
+      if (!row.startTime) {
+        toast.error(`Please select start time in row ${rowNumber}.`);
+        return;
+      }
+
+      if (!row.finishTime) {
+        toast.error(`Please select finish time in row ${rowNumber}.`);
+        return;
+      }
+
+      if (isTimeBefore(row.finishTime, row.startTime)) {
+        toast.error(`Finish Time cannot be before Start Time in row ${rowNumber}.`);
+        return;
+      }
+    }
+
+    const storedBuilding = getStoredEngineerBuilding();
+
+    const finalEntryOnPlace =
+      storedBuilding?.id &&
+        String(storedBuilding.id) === String(selectedBuildingId)
+        ? Number(storedBuilding.entry_on_place || entryOnPlace || 0)
+        : Number(entryOnPlace || 0);
+
+    const payload = {
+      building_id: Number(selectedBuildingId),
+      building_name: form.buildingName,
+      entry_on_place: finalEntryOnPlace,
+      maintenance_entries: logRows.map((row) => ({
+        component_id: Number(row.component),
+        maintenance_type_id: 2,
+        start_time: getDateTime(row.maintenanceDate, row.startTime),
+        finish_time: getDateTime(row.maintenanceDate, row.finishTime),
+        remark: row.remark,
+        maintenance_type_cycle_id: Number(row.maintenanceCycle),
+        entry_date: row.maintenanceDate,
+        entry_on_place: finalEntryOnPlace,
+      })),
+    };
+
+    try {
+      setSubmitLoading(true);
+
+      const response = await axios.post(`${apiUrl}/auth/create_log`, payload, {
+        headers: getAuthHeaders(),
+      });
+
+      if (response?.data?.success) {
+        toast.success(response?.data?.message || "Log created successfully");
+
+        // Remove selected building after successful save
+        localStorage.removeItem("selectedEngineerBuilding");
+
+        const authRoleId = Number(localStorage.getItem("auth_role_id"));
+
+        if (authRoleId === 1 || authRoleId === 3) {
+          navigate("/logs");
+        } else {
+          navigate("/engineer-scan");
+        }
+      } else {
+        toast.error(response?.data?.message || "Failed to create log.");
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
         error?.response?.data?.error ||
         "Failed to create log.",
-    );
-  } finally {
-    setSubmitLoading(false);
-  }
-};
+      );
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
 
   return (
     <>
@@ -1245,8 +1273,8 @@ const handleSubmit = async (e) => {
                 <SelectArrow />
             </div>
 </div> */}
-{/* Building Card */}
-{/* <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+          {/* Building Card */}
+          {/* <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
     <div className="relative">
       <label className="form-label">Select Building</label>
@@ -1275,13 +1303,13 @@ const handleSubmit = async (e) => {
     </div>
   </div>
 </div> */}
-{/* Building Card */}
-<div className="mb-6 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-    <div className="relative">
-      <label className="form-label">Select Building</label>
+          {/* Building Card */}
+          <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="relative">
+                <label className="form-label">Select Building</label>
 
-      {/* <select
+                {/* <select
         value={selectedBuildingId}
         onChange={handleBuildingSelect}
         disabled={buildingLoading}
@@ -1300,197 +1328,195 @@ const handleSubmit = async (e) => {
           </option>
         ))}
       </select> */}
-<select
-  value={selectedBuildingId || ""}
-  onChange={handleBuildingSelect}
-  disabled={buildingLoading}
-    className={`form-select ${
-    errors.building ? "border-red-500" : ""
-  }`}
->
-  <option value="">
-    {buildingLoading ? "Loading..." : "Select Building"}
-  </option>
+                <select
+                  value={selectedBuildingId || ""}
+                  onChange={handleBuildingSelect}
+                  disabled={buildingLoading}
+                  className={`form-select ${errors.building ? "border-red-500" : ""
+                    }`}
+                >
+                  <option value="">
+                    {buildingLoading ? "Loading..." : "Select Building"}
+                  </option>
 
-  {buildingList.map((building) => (
-    <option
-      key={building.building_id || building.id}
-      value={building.building_id || building.id}
-    >
-      {building.building_name || building.name}
-    </option>
-  ))}
-</select>
-      <SelectArrow />
+                  {buildingList.map((building) => (
+                    <option
+                      key={building.building_id || building.id}
+                      value={building.building_id || building.id}
+                    >
+                      {building.building_name || building.name}
+                    </option>
+                  ))}
+                </select>
+                <SelectArrow />
 
-    </div>
- 
-  </div>
-</div>
+              </div>
 
-{/* Log Fields Card */}
-<div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-  <div className="mb-5 flex items-center justify-between">
-    <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-      Log Detail
-    </h3>
+            </div>
+          </div>
 
-    
-  </div>
+          {/* Log Fields Card */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                Log Detail
+              </h3>
 
-  {logRows.map((row, index) => (
-    <div
-      key={index}
-      className={`${
-        index !== 0
-          ? "mt-8 border-t border-gray-200 pt-8 dark:border-gray-800"
-          : ""
-      }`}
-    >
-      <div className="flex justify-between">
-      {logRows.length > 1 && (
-        <h4 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
-          Log Detail {index + 1}
-        </h4>
 
-        
-      )}
-      {index > 0&&
- <button
-        type="button"
-        onClick={() => removeLogRow(index)}
-        disabled={logRows.length === 1}
-        className={`flex h-9 w-9 items-center justify-center rounded-full text-xl font-bold bg-red-600 text-white hover:bg-red-700 fle`}
-        title="Remove" > - 
-      </button>
-}
-</div>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="relative">
-          <label className="form-label">Select System</label>
+            </div>
 
-          <select
-            name="component"
-            value={row.component}
-            onChange={(e) => handleRowChange(index, e)}
-            required
-            disabled={dropdownLoading}
-            className="form-select"
-          >
-            <option value="">
-              {dropdownLoading ? "Loading..." : "Select System"}
-            </option>
-
-            {componentList.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-
-          <SelectArrow />
-        </div>
-
-        <div className="relative">
-          <label className="form-label">Purpose of Visit</label>
-
-          <input type="hidden" name="device" value={row.device} />
-          <input type="hidden" name="maintenanceType" value="2" />
-
-          <select
-            name="maintenanceCycle"
-            value={row.maintenanceCycle}
-            onChange={(e) => handleRowChange(index, e)}
-            required
-            disabled={cycleLoading}
-            className="form-select"
-          >
-            <option value="">
-              {cycleLoading ? "Loading..." : "Select Purpose of Visit"}
-            </option>
-
-            {maintenanceCycleList.map((item) => (
-              <option
-                key={item.maintenance_cycle_id}
-                value={item.maintenance_cycle_id}
+            {logRows.map((row, index) => (
+              <div
+                key={index}
+                className={`${index !== 0
+                  ? "mt-8 border-t border-gray-200 pt-8 dark:border-gray-800"
+                  : ""
+                  }`}
               >
-                {item.maintenance_cycle_name}
-              </option>
+                <div className="flex justify-between">
+                  {logRows.length > 1 && (
+                    <h4 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Log Detail {index + 1}
+                    </h4>
+
+
+                  )}
+                  {index > 0 &&
+                    <button
+                      type="button"
+                      onClick={() => removeLogRow(index)}
+                      disabled={logRows.length === 1}
+                      className={`flex h-9 w-9 items-center justify-center rounded-full text-xl font-bold bg-red-600 text-white hover:bg-red-700 fle`}
+                      title="Remove" > <IoTrashBinSharp />
+                    </button>
+                  }
+                </div>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                  <div className="relative">
+                    <label className="form-label">Select System</label>
+
+                    <select
+                      name="component"
+                      value={row.component}
+                      onChange={(e) => handleRowChange(index, e)}
+                      required
+                      disabled={dropdownLoading}
+                      className="form-select"
+                    >
+                      <option value="">
+                        {dropdownLoading ? "Loading..." : "Select System"}
+                      </option>
+
+                      {componentList.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <SelectArrow />
+                  </div>
+
+                  <div className="relative">
+                    <label className="form-label">Purpose of Visit</label>
+
+                    <input type="hidden" name="device" value={row.device} />
+                    <input type="hidden" name="maintenanceType" value="2" />
+
+                    <select
+                      name="maintenanceCycle"
+                      value={row.maintenanceCycle}
+                      onChange={(e) => handleRowChange(index, e)}
+                      required
+                      disabled={cycleLoading}
+                      className="form-select"
+                    >
+                      <option value="">
+                        {cycleLoading ? "Loading..." : "Select Purpose of Visit"}
+                      </option>
+
+                      {maintenanceCycleList.map((item) => (
+                        <option
+                          key={item.maintenance_cycle_id}
+                          value={item.maintenance_cycle_id}
+                        >
+                          {item.maintenance_cycle_name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <SelectArrow />
+                  </div>
+
+                  <UniqueDatePicker
+                    label="Date"
+                    name="maintenanceDate"
+                    value={row.maintenanceDate}
+                    onChange={(e) => handleRowDateChange(index, e)}
+                    minDate={getTodayDate()}
+                  />
+
+                  <WatchTimePicker
+                    label="Start Time"
+                    value={row.startTime}
+                    onChange={(time) => handleRowStartTimeChange(index, time)}
+                  />
+
+                  <WatchTimePicker
+                    label="Finish Time"
+                    value={row.finishTime}
+                    onChange={(time) => handleRowFinishTimeChange(index, time)}
+                    minTime={row.startTime}
+                  />
+
+                  <div className="relative">
+                    <label className="form-label">Remedial Action Taken</label>
+
+                    <input
+                      type="text"
+                      name="remark"
+                      value={row.remark}
+                      onChange={(e) => handleRowChange(index, e)}
+                      className="form-input"
+                      placeholder="Enter Remedial Action Taken"
+                    />
+                  </div>
+                </div>
+              </div>
             ))}
-          </select>
+          </div>
+          <div className="flex items-center gap-2 mt-3">
+            <button
+              type="button"
+              onClick={addLogRow}
+              className="btn-primary disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              Add New
+            </button>
 
-          <SelectArrow />
-        </div>
+          </div>
+          <div className="mt-5 border-t border-gray-300 pt-5 dark:border-gray-800 sm:pt-6">
+            <div className="flex items-center gap-5">
+              <button
+                type="submit"
+                disabled={submitLoading}
+                className="btn-primary disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {submitLoading ? "Saving..." : "Finish"}
+              </button>
 
-        <UniqueDatePicker
-          label="Date"
-          name="maintenanceDate"
-          value={row.maintenanceDate}
-          onChange={(e) => handleRowDateChange(index, e)}
-          minDate={getTodayDate()}
-        />
+              <button
+                type="button"
+                onClick={resetForm}
+                disabled={submitLoading}
+                className="btn-secondary disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
 
-        <WatchTimePicker
-          label="Start Time"
-          value={row.startTime}
-          onChange={(time) => handleRowStartTimeChange(index, time)}
-        />
-
-        <WatchTimePicker
-          label="Finish Time"
-          value={row.finishTime}
-          onChange={(time) => handleRowFinishTimeChange(index, time)}
-          minTime={row.startTime}
-        />
-
-        <div className="relative">
-          <label className="form-label">Remedial Action Taken</label>
-
-          <input
-            type="text"
-            name="remark"
-            value={row.remark}
-            onChange={(e) => handleRowChange(index, e)}
-            className="form-input"
-            placeholder="Enter Remedial Action Taken"
-          />
-        </div>
-      </div>
-    </div>
-  ))}
-</div>
-<div className="flex items-center gap-2 mt-3">
-   <button
-      type="button"
-       onClick={addLogRow}
-      className="btn-primary disabled:cursor-not-allowed disabled:opacity-70"
-    >
-       Add New
-    </button>
-     
-    </div>
-<div className="mt-5 border-t border-gray-300 pt-5 dark:border-gray-800 sm:pt-6">
-  <div className="flex items-center gap-5">
-    <button
-      type="submit"
-      disabled={submitLoading}
-      className="btn-primary disabled:cursor-not-allowed disabled:opacity-70"
-    >
-      {submitLoading ? "Saving..." : "Finish"}
-    </button>
-
-    <button
-      type="button"
-      onClick={resetForm}
-      disabled={submitLoading}
-      className="btn-secondary disabled:cursor-not-allowed disabled:opacity-70"
-    >
-      Clear
-    </button>
-  </div>
-</div>
-
-{/* Dynamic Log Fields Card */}
+          {/* Dynamic Log Fields Card */}
 
         </form>
       </div>

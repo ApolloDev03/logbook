@@ -84,24 +84,39 @@ export default function DashboardFilters({
             Year
           </label>
 
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
-          >
-            {Array.from(
-              { length: new Date().getFullYear() - 2026 + 1 },
-              (_, index) => {
-                const year = 2026 + index;
+          <div className="relative">
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="w-full appearance-none rounded-lg border border-gray-300 bg-white px-4 py-2.5 pr-10 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
+            >
+              {Array.from(
+                { length: new Date().getFullYear() - 2026 + 1 },
+                (_, index) => {
+                  const year = 2026 + index;
 
-                return (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                );
-              }
-            )}
-          </select>
+                  return (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  );
+                }
+              )}
+            </select>
+            <svg
+              className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-black dark:text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
         </div>
 
         {/* Month */}

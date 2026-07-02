@@ -902,6 +902,7 @@ export default function Building() {
               Show
             </span>
 
+          <div className="relative">       
             <select
               value={limit}
               onChange={(e) => {
@@ -913,7 +914,7 @@ export default function Building() {
                 // Fetch first page with new limit
                 getBuildingList(1, newLimit);
               }}
-              className="rounded-lg border border-gray-300 px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+              className="rounded-lg border appearance-none pr-6 border-gray-300 px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -922,6 +923,20 @@ export default function Building() {
               <option value={200}>200</option>
               <option value={500}>500</option>
             </select>
+            <svg
+                className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-black dark:text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
