@@ -309,7 +309,7 @@ export default function Dashboard() {
         const recentLogs = (data?.recent_logs || []).map((item) => ({
           id: `FS-${String(item.log_id).padStart(4, "0")}`,
           log_id: item.log_id,
-          type: item.log_type || "-",
+          type: item.details?.[0]?.Purpose_of_Visit || "-",
           engineer: item.engineer || "-",
           company: item.customer_company || "-",
           building: item.building || "-",
@@ -727,7 +727,7 @@ export default function Dashboard() {
             <div className="card overflow-hidden rounded-xl">
               <div className="m-4 flex flex-col gap-4 sm:m-5 md:m-6 md:flex-row md:items-center">
                 <h3 className="text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
-                  Recent Logs
+                  Today Log
                 </h3>
               </div>
 
@@ -794,7 +794,7 @@ export default function Dashboard() {
                           colSpan={6}
                           className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400"
                         >
-                          {loading ? "Loading..." : "No recent logs found"}
+                          {loading ? "Loading..." : "No Today Log found"}
                         </td>
                       </tr>
                     )}

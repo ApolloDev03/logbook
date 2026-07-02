@@ -684,7 +684,7 @@ export default function Dashboard() {
             <div className="card overflow-hidden rounded-xl">
               <div className="m-4 sm:m-6">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                  Recent Logs
+                  Today Log
                 </h3>
               </div>
 
@@ -754,7 +754,7 @@ export default function Dashboard() {
                           colSpan={7}
                           className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400"
                         >
-                          {loading ? "Loading..." : "No recent logs found"}
+                          {loading ? "Loading..." : "No Today Log found"}
                         </td>
                       </tr>
                     )}

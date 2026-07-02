@@ -8,6 +8,7 @@ import { apiUrl } from "../config";
 import { useApp } from "../context/AppContext";
 import { toast } from "react-toastify";
 import defaultLogo from "../assets/images/defaultlogo.jpeg";
+import { useNavigate } from "react-router-dom";
 
 const getToken = () => {
   return localStorage.getItem("auth_token") || "";
@@ -33,7 +34,7 @@ const getAuthUser = () => {
 
 const getProfileImage = (profile) => {
   const image =
-    profile?.profile_image_url ;
+    profile?.profile_image_url;
 
   if (!image) return defaultLogo;
 
@@ -66,6 +67,8 @@ export default function Profile() {
 
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState(null);
+
+  const [changePasswordModal, setChangePasswordModal] = useState(false);
 
   const fetchProfile = async () => {
     try {
@@ -125,15 +128,15 @@ export default function Profile() {
                   <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
                     <div className="flex w-full flex-col items-center gap-6 xl:flex-row">
                       <div className="h-20 w-20 overflow-hidden rounded-full border border-gray-200 dark:border-gray-800">
-                     <img
-  src={profileImage}
-  alt="user"
-  className="h-full w-full object-cover"
-  onError={(e) => {
-    e.currentTarget.onerror = null;
-    e.currentTarget.src = defaultLogo;
-  }}
-/>
+                        <img
+                          src={profileImage}
+                          alt="user"
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = defaultLogo;
+                          }}
+                        />
                       </div>
 
                       <div>
@@ -158,11 +161,11 @@ export default function Profile() {
                   items={[
                     ...(Number(profile?.role_id) === 3
                       ? [
-                          {
-                            label: "Company Name",
-                            value: getProfileDisplayName(profile),
-                          },
-                        ]
+                        {
+                          label: "Company Name",
+                          value: getProfileDisplayName(profile),
+                        },
+                      ]
                       : []),
                     {
                       label:
@@ -205,9 +208,20 @@ export default function Profile() {
                       label: "Address Line 1",
                       value: profile?.address || "-",
                     },
-                      {
+                    {
                       label: "Address Line 2",
                       value: profile?.address_line_2 || "-",
+                    },
+                  ]}
+                />
+
+                <InfoSection
+                  title="Change Password"
+                  onEdit={() => setChangePasswordModal(true)}
+                  items={[
+                    {
+                      label: "Password",
+                      value: "••••••••••••",
                     },
                   ]}
                 />
@@ -230,6 +244,12 @@ export default function Profile() {
           profile={profile}
           onClose={() => setAddressModal(false)}
           onRefresh={fetchProfile}
+        />
+      )}
+
+      {changePasswordModal && (
+        <ChangePasswordModal
+          onClose={() => setChangePasswordModal(false)}
         />
       )}
     </div>
@@ -358,27 +378,27 @@ function ProfileInfoModal({ profile, onClose, onRefresh }) {
   });
 
 
-const isCustomer =
-  Number(authUser?.role_id) === 3 ||
-  Number(authUser?.customer?.role_id) === 3;
+  const isCustomer =
+    Number(authUser?.role_id) === 3 ||
+    Number(authUser?.customer?.role_id) === 3;
 
-const [companyLogoFile, setCompanyLogoFile] = useState(null);
-const [companyLogoIconFile, setCompanyLogoIconFile] = useState(null);
+  const [companyLogoFile, setCompanyLogoFile] = useState(null);
+  const [companyLogoIconFile, setCompanyLogoIconFile] = useState(null);
 
-const [companyLogoPreview, setCompanyLogoPreview] = useState("");
-const [companyLogoIconPreview, setCompanyLogoIconPreview] = useState("");
+  const [companyLogoPreview, setCompanyLogoPreview] = useState("");
+  const [companyLogoIconPreview, setCompanyLogoIconPreview] = useState("");
   const [profileImage, setProfileImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(getProfileImage(profile));
   const [saving, setSaving] = useState(false);
-useEffect(() => {
-  setAuthUser(getAuthUser());
-}, []);
-useEffect(() => {
-  if (!authUser) return;
+  useEffect(() => {
+    setAuthUser(getAuthUser());
+  }, []);
+  useEffect(() => {
+    if (!authUser) return;
 
-  setCompanyLogoPreview(authUser?.customer?.logo_url || "");
-  setCompanyLogoIconPreview(authUser?.customer?.logo_icon_url || "");
-}, [authUser]);
+    setCompanyLogoPreview(authUser?.customer?.logo_url || "");
+    setCompanyLogoIconPreview(authUser?.customer?.logo_icon_url || "");
+  }, [authUser]);
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -404,121 +424,121 @@ useEffect(() => {
     }
   };
   const handleCompanyLogoIconChange = (e) => {
-  const file = e.target.files?.[0];
+    const file = e.target.files?.[0];
 
-  if (!file) return;
+    if (!file) return;
 
-  setCompanyLogoIconFile(file);
-  setCompanyLogoIconPreview(URL.createObjectURL(file));
-};
-const handleCompanyLogoChange = (e) => {
-  const file = e.target.files?.[0];
+    setCompanyLogoIconFile(file);
+    setCompanyLogoIconPreview(URL.createObjectURL(file));
+  };
+  const handleCompanyLogoChange = (e) => {
+    const file = e.target.files?.[0];
 
-  if (!file) return;
+    if (!file) return;
 
-  setCompanyLogoFile(file);
-  setCompanyLogoPreview(URL.createObjectURL(file));
-};
+    setCompanyLogoFile(file);
+    setCompanyLogoPreview(URL.createObjectURL(file));
+  };
   const handleSave = async () => {
     try {
       setSaving(true);
 
       const data = new FormData();
 
-data.append("name", formData.name);
-data.append("email", profile.email);
-data.append("mobile_number", formData.mobile_number);
-data.append("postcode", profile.postcode || "");
-data.append("address", profile.address || "");
-data.append("countryid", profile.countryid || "");
-data.append("stateid", profile.stateid || "");
-data.append("cityid", profile.cityid || "");
-data.append("role_id", profile.role_id);
+      data.append("name", formData.name);
+      data.append("email", profile.email);
+      data.append("mobile_number", formData.mobile_number);
+      data.append("postcode", profile.postcode || "");
+      data.append("address", profile.address || "");
+      data.append("countryid", profile.countryid || "");
+      data.append("stateid", profile.stateid || "");
+      data.append("cityid", profile.cityid || "");
+      data.append("role_id", profile.role_id);
 
-if (Number(profile.role_id) === 3) {
-  data.append(
-    "customer_company_name",
-    formData.company_name
-  );
-}
+      if (Number(profile.role_id) === 3) {
+        data.append(
+          "customer_company_name",
+          formData.company_name
+        );
+      }
 
-if (profileImage) {
-  data.append("profile_image", profileImage);
-}
+      if (profileImage) {
+        data.append("profile_image", profileImage);
+      }
 
-if (companyLogoFile) {
-  data.append(
-    "customer_company_logo",
-    companyLogoFile
-  );
-}
+      if (companyLogoFile) {
+        data.append(
+          "customer_company_logo",
+          companyLogoFile
+        );
+      }
 
-if (companyLogoIconFile) {
-  data.append(
-    "customer_company_logo_icon",
-    companyLogoIconFile
-  );
-}
+      if (companyLogoIconFile) {
+        data.append(
+          "customer_company_logo_icon",
+          companyLogoIconFile
+        );
+      }
       const token = getToken();
 
-    const res = await axios.post(`${apiUrl}/auth/updateProfile`, data, {
-  headers: {
-    Authorization: token,
-    token: token,
-    "x-access-token": token,
-    "Content-Type": "multipart/form-data",
-  },
-});
+      const res = await axios.post(`${apiUrl}/auth/updateProfile`, data, {
+        headers: {
+          Authorization: token,
+          token: token,
+          "x-access-token": token,
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-if (res.data?.success) {
-  const authUser = getAuthUser();
+      if (res.data?.success) {
+        const authUser = getAuthUser();
 
-  // Update profile image
-  if (res.data.profile_image_url) {
-    authUser.profile_image_url = res.data.profile_image_url;
-  }
+        // Update profile image
+        if (res.data.profile_image_url) {
+          authUser.profile_image_url = res.data.profile_image_url;
+        }
 
-  // Update customer logo
-  if (authUser.customer) {
-    authUser.customer = {
-      ...authUser.customer,
-      logo_url:
-        res.data.company_logo_url ??
-        authUser.customer.logo_url,
+        // Update customer logo
+        if (authUser.customer) {
+          authUser.customer = {
+            ...authUser.customer,
+            logo_url:
+              res.data.company_logo_url ??
+              authUser.customer.logo_url,
 
-      logo_icon_url:
-        res.data.company_logo_icon_url ??
-        authUser.customer.logo_icon_url,
-    };
-  }
+            logo_icon_url:
+              res.data.company_logo_icon_url ??
+              authUser.customer.logo_icon_url,
+          };
+        }
 
-  // Save updated object
-  localStorage.setItem(
-    "auth_user",
-    JSON.stringify(authUser)
-  );
+        // Save updated object
+        localStorage.setItem(
+          "auth_user",
+          JSON.stringify(authUser)
+        );
 
-  // Update state
-  setAuthUser(authUser);
+        // Update state
+        setAuthUser(authUser);
 
-  // Update previews
-  setCompanyLogoPreview(authUser.customer?.logo_url || "");
-  setCompanyLogoIconPreview(authUser.customer?.logo_icon_url || "");
+        // Update previews
+        setCompanyLogoPreview(authUser.customer?.logo_url || "");
+        setCompanyLogoIconPreview(authUser.customer?.logo_icon_url || "");
 
-  if (res.data.profile_image_url) {
-    setPreviewImage(res.data.profile_image_url);
-  }
+        if (res.data.profile_image_url) {
+          setPreviewImage(res.data.profile_image_url);
+        }
 
-  toast.success(res.data.message);
+        toast.success(res.data.message);
 
-  await onRefresh();
+        await onRefresh();
 
-  onClose();
-  window.location.reload();
-}
- else {
-  toast.error(res.data?.message || "Profile update failed");
-}
+        onClose();
+        window.location.reload();
+      }
+      else {
+        toast.error(res.data?.message || "Profile update failed");
+      }
     } catch (error) {
       console.error("Update Profile Error:", error);
       toast.error(error.response?.data?.message || "Something went wrong");
@@ -570,54 +590,54 @@ if (res.data?.success) {
           onChange={handleChange}
         />
         {isCustomer && (
-  <>
-    <div className="md:col-span-1">
-      <label className="mb-2 block font-semibold">
-        Company Logo
-      </label>
-<div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="h-20 w-24 shrink-0 overflow-hidden    dark:border-gray-800">
-              <img
-                src={companyLogoPreview}
-                alt="profile"
-                className=" object-cover"
-              />
+          <>
+            <div className="md:col-span-1">
+              <label className="mb-2 block font-semibold">
+                Company Logo
+              </label>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div className="h-20 w-24 shrink-0 overflow-hidden    dark:border-gray-800">
+                  <img
+                    src={companyLogoPreview}
+                    alt="profile"
+                    className=" object-cover"
+                  />
+                </div>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCompanyLogoChange}
+                  className="h-11 w-full rounded-lg border border-gray-300 text-sm text-gray-500 file:mr-4 file:h-full file:border-0 file:border-r file:border-gray-300 file:bg-white file:px-4 file:text-sm file:font-medium file:text-gray-700 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400"
+                />
+              </div>
+
             </div>
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleCompanyLogoChange}
-              className="h-11 w-full rounded-lg border border-gray-300 text-sm text-gray-500 file:mr-4 file:h-full file:border-0 file:border-r file:border-gray-300 file:bg-white file:px-4 file:text-sm file:font-medium file:text-gray-700 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400"
-            />
-          </div>
-      
-    </div>
+            <div className="md:col-span-1">
+              <label className="mb-2 block font-semibold">
+                Company Logo Icon
+              </label>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div className="h-20 w-24 shrink-0 overflow-hidden   dark:border-gray-800">
+                  <img
+                    src={companyLogoIconPreview}
+                    alt="profile"
+                    className=" object-cover"
+                  />
+                </div>
 
-    <div className="md:col-span-1">
-      <label className="mb-2 block font-semibold">
-        Company Logo Icon
-      </label>
-<div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="h-20 w-24 shrink-0 overflow-hidden   dark:border-gray-800">
-              <img
-                src={companyLogoIconPreview}
-                alt="profile"
-                className=" object-cover"
-              />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCompanyLogoIconChange}
+                  className="h-11 w-full rounded-lg border border-gray-300 text-sm text-gray-500 file:mr-4 file:h-full file:border-0 file:border-r file:border-gray-300 file:bg-white file:px-4 file:text-sm file:font-medium file:text-gray-700 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400"
+                />
+              </div>
+
             </div>
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleCompanyLogoIconChange}
-              className="h-11 w-full rounded-lg border border-gray-300 text-sm text-gray-500 file:mr-4 file:h-full file:border-0 file:border-r file:border-gray-300 file:bg-white file:px-4 file:text-sm file:font-medium file:text-gray-700 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400"
-            />
-          </div>
-      
-    </div>
-  </>
-)}
+          </>
+        )}
         {/* Profile image last */}
         <div className="md:col-span-1">
           <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -626,15 +646,15 @@ if (res.data?.success) {
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full border border-gray-200 dark:border-gray-800">
-           <img
-  src={previewImage || defaultLogo}
-  alt="profile"
-  className="h-full w-full object-cover"
-  onError={(e) => {
-    e.currentTarget.onerror = null;
-    e.currentTarget.src = defaultLogo;
-  }}
-/>
+              <img
+                src={previewImage || defaultLogo}
+                alt="profile"
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = defaultLogo;
+                }}
+              />
             </div>
 
             <input
@@ -683,15 +703,15 @@ function AddressModal({ profile, onClose, onRefresh }) {
 
   const stateList = statesByCountry?.[selectedCountryId] || [];
   const cityList = citiesByState?.[selectedStateId] || [];
-const selectedCountry = countries.find(
-  (item) => String(getCountryId(item)) === String(formData.countryid)
-);
-
-const isUK =
-  selectedCountry &&
-  ["uk", "united kingdom"].includes(
-    String(getCountryName(selectedCountry)).toLowerCase()
+  const selectedCountry = countries.find(
+    (item) => String(getCountryId(item)) === String(formData.countryid)
   );
+
+  const isUK =
+    selectedCountry &&
+    ["uk", "united kingdom"].includes(
+      String(getCountryName(selectedCountry)).toLowerCase()
+    );
   useEffect(() => {
     getCountryList();
   }, []);
@@ -768,30 +788,30 @@ const isUK =
       [e.target.name]: e.target.value,
     }));
   };
-const handleCountryChange = (e) => {
-  const countryid = e.target.value;
+  const handleCountryChange = (e) => {
+    const countryid = e.target.value;
 
-  const selected = countries.find(
-    (item) => String(getCountryId(item)) === String(countryid)
-  );
-
-  const isSelectedUK =
-    selected &&
-    ["uk", "united kingdom"].includes(
-      String(getCountryName(selected)).toLowerCase()
+    const selected = countries.find(
+      (item) => String(getCountryId(item)) === String(countryid)
     );
 
-  setFormData((prev) => ({
-    ...prev,
-    countryid,
-    stateid: isSelectedUK ? "37" : "",
-    cityid: "",
-  }));
+    const isSelectedUK =
+      selected &&
+      ["uk", "united kingdom"].includes(
+        String(getCountryName(selected)).toLowerCase()
+      );
 
-  if (!isSelectedUK && countryid) {
-    getStateList(countryid);
-  }
-};
+    setFormData((prev) => ({
+      ...prev,
+      countryid,
+      stateid: isSelectedUK ? "37" : "",
+      cityid: "",
+    }));
+
+    if (!isSelectedUK && countryid) {
+      getStateList(countryid);
+    }
+  };
 
   const handleStateChange = (e) => {
     const stateid = e.target.value;
@@ -827,9 +847,9 @@ const handleCountryChange = (e) => {
         role_id: profile?.role_id || "",
         postcode: formData.postcode,
         address: formData.address,
-        address_line_2:formData.address2,
+        address_line_2: formData.address2,
         countryid: formData.countryid,
-         stateid: isUK ? "37" : formData.stateid,
+        stateid: isUK ? "37" : formData.stateid,
         cityid: formData.cityid,
       };
 
@@ -866,20 +886,20 @@ const handleCountryChange = (e) => {
           getLabel={getCountryName}
           placeholder="Select Country"
         />
-{!isUK && (
-  <SelectInput
-    label="State"
-    name="stateid"
-    value={String(formData.stateid || "")}
-    onChange={handleStateChange}
-    loading={stateLoading}
-    options={stateList}
-    getValue={getStateId}
-    getLabel={getStateName}
-    placeholder="Select State"
-    disabled={!formData.countryid}
-  />
-)}
+        {!isUK && (
+          <SelectInput
+            label="State"
+            name="stateid"
+            value={String(formData.stateid || "")}
+            onChange={handleStateChange}
+            loading={stateLoading}
+            options={stateList}
+            getValue={getStateId}
+            getLabel={getStateName}
+            placeholder="Select State"
+            disabled={!formData.countryid}
+          />
+        )}
 
         <SelectInput
           label="City"
@@ -920,6 +940,107 @@ const handleCountryChange = (e) => {
       </div>
 
       <ModalActions onClose={onClose} onSave={handleSave} saving={saving} />
+    </ModalWrapper>
+  );
+}
+
+function ChangePasswordModal({ onClose }) {
+  const [formData, setFormData] = useState({
+    old_password: "",
+    new_password: "",
+  });
+
+  const [saving, setSaving] = useState(false);
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!formData.old_password.trim()) {
+      toast.error("Old password is required");
+      return;
+    }
+
+    if (!formData.new_password.trim()) {
+      toast.error("New password is required");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const res = await axios.post(
+        `${apiUrl}/auth/changePassword`,
+        {
+          old_password: formData.old_password,
+          new_password: formData.new_password,
+        },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (res.data?.success) {
+        toast.success(
+          res.data.message || "Password changed successfully"
+        );
+        onClose();
+        localStorage.clear();
+        navigate("/signin", { replace: true });
+      } else {
+        toast.error(res.data?.message || "Failed to change password");
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Something went wrong"
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <ModalWrapper title="Change Password" onClose={onClose}>
+      <div className="grid grid-cols-1 gap-5">
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Old Password
+          </label>
+
+          <input
+            type="password"
+            name="old_password"
+            value={formData.old_password}
+            onChange={handleChange}
+            className="h-11 w-full rounded-lg border border-gray-300 px-4 text-sm shadow-sm focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          />
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            New Password
+          </label>
+
+          <input
+            type="password"
+            name="new_password"
+            value={formData.new_password}
+            onChange={handleChange}
+            className="h-11 w-full rounded-lg border border-gray-300 px-4 text-sm shadow-sm focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          />
+        </div>
+      </div>
+
+      <ModalActions
+        onClose={onClose}
+        onSave={handleSave}
+        saving={saving}
+      />
     </ModalWrapper>
   );
 }
@@ -974,11 +1095,10 @@ function Input({
         value={value}
         onChange={onChange}
         disabled={disabled}
-        className={`h-11 w-full rounded-lg border border-gray-300 px-4 text-sm shadow-sm focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white ${
-          disabled
-            ? "cursor-not-allowed bg-gray-100 text-gray-500 select-none dark:bg-gray-800 dark:text-gray-400"
-            : "text-gray-800 focus:border-blue-500"
-        }`}
+        className={`h-11 w-full rounded-lg border border-gray-300 px-4 text-sm shadow-sm focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white ${disabled
+          ? "cursor-not-allowed bg-gray-100 text-gray-500 select-none dark:bg-gray-800 dark:text-gray-400"
+          : "text-gray-800 focus:border-blue-500"
+          }`}
       />
 
       {helperText ? (

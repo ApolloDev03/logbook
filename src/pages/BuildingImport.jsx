@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Breadcrumb from "../components/ui/Breadcrumb";
 import { apiUrl } from "../config";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const getToken = () => {
   return localStorage.getItem("auth_token") || "";
@@ -21,6 +22,7 @@ const getAuthHeaders = () => {
 
 export default function BuildingImport() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const [file, setFile] = useState(null);
 
@@ -30,12 +32,63 @@ export default function BuildingImport() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!file) {
+      toast.error("Please select a CSV/Excel file.");
       return;
     }
 
-    // API Call Here
+    try {
+      setLoading(true);
+
+      const formData = new FormData();
+      formData.append("csv_file", file);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/import_buildings_csv`,
+        formData,
+        {
+          headers: {
+            Authorization: getToken(),
+            token: getToken(),
+            "x-access-token": getToken(),
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const data = response.data;
+
+      if (data.success) {
+        toast.success(data.message);
+
+        setFile(null);
+
+        // Reset file input
+        const input = document.querySelector('input[type="file"]');
+        if (input) {
+          input.value = "";
+        }
+
+        navigate("/building");
+      } else {
+        toast.error(data.message);
+
+        if (data.results?.failed?.length) {
+          data.results.failed.forEach((item) => {
+            toast.error(
+              `Row ${item.row}: ${item.reason || item.errors?.join(", ")}`
+            );
+          });
+        }
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to import buildings."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDownloadTemplate = async () => {
@@ -152,9 +205,10 @@ export default function BuildingImport() {
               <button
                 type="button"
                 onClick={handleSubmit}
+                disabled={loading}
                 className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
               >
-                Import Building
+                {loading ? "Importing..." : "Import Building"}
               </button>
             </div>
           </div>

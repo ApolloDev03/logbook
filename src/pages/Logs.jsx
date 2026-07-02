@@ -1206,7 +1206,7 @@ export default function Logs() {
                       value={formatDate(entry?.entry_date)}
                     />
                     <Info
-                      label="start Time"
+                      label="Start Time"
                       value={`${formatOnlyTime(entry?.start_time)} `}
                     />
                     <Info

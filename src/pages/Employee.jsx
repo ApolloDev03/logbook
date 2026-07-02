@@ -383,7 +383,7 @@ export default function Employee() {
     setEmployees(sortedEmployees);
   };
 
-  
+
 
 
   return (
@@ -444,7 +444,7 @@ export default function Employee() {
               </button>
             )}
 
-            
+
 
             <button
               type="button"
@@ -504,8 +504,8 @@ export default function Employee() {
                       ) : (
                         <span
                           className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${Number(emp.status || 0) === 1
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
                             }`}
                         >
                           {Number(emp.status || 0) === 1
@@ -585,27 +585,42 @@ export default function Employee() {
             <span className="text-sm text-gray-600 dark:text-gray-400">
               Show
             </span>
+            
+            <div className="relative">
+              <select
+                value={limit}
+                onChange={(e) => {
+                  const newLimit = Number(e.target.value);
 
-            <select
-              value={limit}
-              onChange={(e) => {
-                const newLimit = Number(e.target.value);
+                  setLimit(newLimit);
+                  setPage(1);
 
-                setLimit(newLimit);
-                setPage(1);
-
-                // Fetch first page with new limit
-                getEmployeeList(1, newLimit);
-              }}
-              className="rounded-lg border border-gray-300 px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-              <option value={200}>200</option>
-              <option value={500}>500</option>
-            </select>
+                  // Fetch first page with new limit
+                  getEmployeeList(1, newLimit);
+                }}
+                className="rounded-lg appearance-none border border-gray-300 px-2 py-2 pr-6 text-sm dark:border-gray-700 dark:bg-gray-900"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+                <option value={200}>200</option>
+                <option value={500}>500</option>
+              </select>
+              <svg
+                className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-black dark:text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -626,8 +641,8 @@ export default function Employee() {
                   disabled={loading}
                   onClick={() => handlePageChange(pageNumber)}
                   className={`rounded-lg border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${pageNumber === page
-                      ? "border-blue-600 bg-blue-600 text-white"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    ? "border-blue-600 bg-blue-600 text-white"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                     }`}
                 >
                   {pageNumber}
