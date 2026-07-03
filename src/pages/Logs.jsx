@@ -1132,14 +1132,19 @@ export default function Logs() {
 
             </span>
             <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-
-              {selectedLog?.entry_on_place
-                ? <>
-                  <span className="font-semibold">Generate Via:</span> {selectedLog?.entry_on_place == "2" ? "Manual Search" : (selectedLog?.entry_on_place == "1") ? "scanner" : "Admin"}
+              {selectedLog?.entry_on_place !== undefined &&
+                selectedLog?.entry_on_place !== null ? (
+                <>
+                  <span className="font-semibold">Generate Via:</span>{" "}
+                  {Number(selectedLog.entry_on_place) === 0
+                    ? "Manual"
+                    : Number(selectedLog.entry_on_place) === 1
+                      ? "Scanner"
+                      : Number(selectedLog.entry_on_place) === 2
+                        ? "Mobile Manual"
+                        : ""}
                 </>
-                : "Loading log information"
-              }
-
+              ) : null}
             </span>
           </div>
         </div>
