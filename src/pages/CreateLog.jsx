@@ -713,7 +713,10 @@ export default function CreateLog() {
     };
 
     setSelectedBuilding(buildingInfo);
-    setSelectedBuildingId(buildingInfo.id ? String(buildingInfo.id) : "");
+    // setSelectedBuildingId(buildingInfo.id ? String(buildingInfo.id) : "");
+    if (!selectedBuildingId) {
+      setSelectedBuildingId(String(buildingInfo.id));
+    }
     setEntryOnPlace(Number(buildingInfo.entry_on_place || 0));
 
     setForm((prev) => ({
@@ -986,7 +989,10 @@ export default function CreateLog() {
   }, []);
   const handleBuildingSelect = (e) => {
     const id = e.target.value;
+
     setSelectedBuildingId(id);
+    console.log(selectedBuildingId, "idddddd");
+
 
     if (!id) {
       setSelectedBuilding({
@@ -1009,10 +1015,7 @@ export default function CreateLog() {
     );
 
     if (building) {
-      setBuildingValue(
-        building,
-        storedBuilding.entry_on_place
-      );
+      setBuildingValue(building);
     }
   };
 
@@ -1136,7 +1139,7 @@ export default function CreateLog() {
       toast.error("Please select building.");
       return;
     }
-
+    console.log(form.buildingName, "building nameeeee")
     if (!form.buildingName.trim()) {
       toast.error("Please enter building name.");
       return;

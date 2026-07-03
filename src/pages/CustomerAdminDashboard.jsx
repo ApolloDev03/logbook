@@ -256,9 +256,10 @@ export default function Dashboard() {
         setDashboardData(data);
 
         const recentLogsData = (data?.recent_logs || []).map((item) => ({
-          id: `FS-${String(item.log_id).padStart(4, "0")}`,
+          // id: `FS-${String(item.log_id).padStart(4, "0")}`,
+          id: item.company_unique_log_id,
           log_id: item.log_id,
-          type: item.log_type || "-",
+          type: item.details?.[0]?.Purpose_of_Visit || "-",
           engineer: item.engineer || "-",
           customer: item.customer_company || "-",
           building: item.building || "-",
@@ -810,15 +811,22 @@ export default function Dashboard() {
 
             </span>
             <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-
-              {selectedLog?.entry_on_place
-                ? <>
-                  <span className="font-semibold">Generate Via:</span> {selectedLog?.entry_on_place == "2" ? "Manual Search" : (selectedLog?.entry_on_place == "1") ? "scanner" : "Admin"}
+              {selectedLog?.entry_on_place !== undefined &&
+                selectedLog?.entry_on_place !== null ? (
+                <>
+                  <span className="font-semibold">Generate Via:</span>{" "}
+                  {Number(selectedLog.entry_on_place) === 0
+                    ? "Manual"
+                    : Number(selectedLog.entry_on_place) === 1
+                      ? "Scanner"
+                      : Number(selectedLog.entry_on_place) === 2
+                        ? "Mobile Manual"
+                        : ""}
                 </>
-                : "Loading log information"
-              }
-
+              ) : null}
             </span>
+
+            
           </div>
         </div>
 
