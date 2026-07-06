@@ -312,7 +312,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-import logo from "../assets/images/logo/logo.svg";
+import logo from "../assets/images/logo/logo-new-dark.png";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useApp } from "../context/AppContext";
 import { apiUrl } from "../config";
@@ -570,17 +570,18 @@ export default function SignIn() {
         </div>
 
         {/* Right Side */}
-        <div className="relative hidden h-full w-full items-center bg-[#161950] dark:bg-white/5 lg:grid lg:w-1/2">
+        <div className="relative hidden h-full w-full items-center bg-white shadow-[0px_4px_20px_0px_#00000030]  dark:bg-white/5  lg:grid lg:w-1/2">
           <GridShape />
 
           <div className="relative z-10 flex items-center justify-center">
             <div className="flex max-w-xs flex-col items-center">
               <a href="/" className="mb-4 block">
-                <img src={logo} alt="Logo" className="h-auto max-w-[320px]" />
+                {/* <img src={logo} alt="Logo" className="h-auto max-w-[320px]" /> */}
+                <img src={logo} alt="Logo" className="h-auto max-w-[250px]" />
               </a>
 
               <p className="text-center text-gray-400 dark:text-white/60">
-                Welcome to the Fire System Digital Log Book. Your comprehensive
+                Welcome to the Attentive Fire Digital Log Book. Your comprehensive
                 solution for managing and documenting fire safety inspections,
                 maintenance.
               </p>

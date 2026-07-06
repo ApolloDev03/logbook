@@ -491,14 +491,14 @@ export function AppProvider({ children }) {
     }
   };
 
-  const getCityList = async (stateId) => {
+  const getCityList = async (stateId, force = false) => {
     if (!stateId) return [];
 
     try {
       const key = String(stateId);
 
       // same state cities already loaded then no API call
-      if (citiesByState[key]) {
+      if (!force && citiesByState[key]) {
         return citiesByState[key];
       }
 

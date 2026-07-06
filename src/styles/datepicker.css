@@ -85,7 +85,7 @@
   font-family: inherit;
 }
 
-.react-datepicker__header {
+/* .react-datepicker__header {
   display: none;
 }
 
@@ -99,7 +99,7 @@
 
 .react-datepicker__triangle {
   display: none;
-}
+} */
 
 .react-datepicker__day-name,
 .react-datepicker__day {
@@ -118,3 +118,5 @@
   color: #000 !important;
   border: 1px solid #2563ea !important;
 }
+
+

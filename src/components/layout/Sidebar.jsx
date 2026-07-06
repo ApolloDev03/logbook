@@ -273,9 +273,9 @@ const roleId = isCustomerRole ? 3 : authRoleId;
 
   const customerData = authUser?.customer || {};
 
-const defaultLogo = "/images/logo/logo.svg";
-const defaultDarkLogo = "/images/logo/logo-dark.svg";
-const defaultLogoIcon = "/images/logo/logo-icon.svg";
+const defaultLogo = "/images/logo/logo-new-dark.png";
+const defaultDarkLogo = "/images/logo/logo-new-dark.png";
+const defaultLogoIcon = "/images/logo/logo-new-icon.png";
 
 const customerLogo = customerData?.logo_url || "";
 const customerLogoIcon = customerData?.logo_icon_url || "";
@@ -522,7 +522,7 @@ const canShowReportLogs =
       }`}
     >
       <div
-        className={`sidebar-header flex shrink-0 items-center gap-2 pt-6 pb-6 sm:pt-8 sm:pb-7 ${
+        className={`sidebar-header flex shrink-0 items-center justify-center gap-2 pt-6 pb-6 sm:pt-8 sm:pb-7 ${
           sidebarToggle
             ? "justify-between lg:justify-center lg:group-hover/sidebar:justify-between"
             : "justify-between"
@@ -537,7 +537,7 @@ const canShowReportLogs =
             }`}
           >
             <img
-              className="h-10 max-w-[210px] object-contain lg:h-[56.81px] dark:hidden"
+              className="h-10 max-w-[210px] object-contain lg:h-[130px] dark:hidden"
               src={sidebarLogo}
               alt="Logo"
               onError={(e) => {
@@ -546,7 +546,7 @@ const canShowReportLogs =
             />
 
             <img
-              className="hidden h-10 max-w-[210px] object-contain lg:h-[56.81px] dark:block"
+              className="hidden h-10 max-w-[210px] object-contain lg:h-[130px] dark:block"
               src={sidebarDarkLogo}
               alt="Logo"
               onError={(e) => {
@@ -610,7 +610,7 @@ const canShowReportLogs =
                   </p>
 
                   <img
-                    className="mx-auto h-8 max-w-[180px] object-contain dark:hidden"
+                    className="mx-auto h-16 max-w-[180px] object-contain dark:hidden"
                     src={defaultLogo}
                     alt="Fire Systems"
                   />

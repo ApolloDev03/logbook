@@ -257,19 +257,13 @@ export default function Dashboard() {
 
         const recentLogsData = (data?.recent_logs || []).map((item) => ({
           // id: `FS-${String(item.log_id).padStart(4, "0")}`,
-          id: item.company_unique_log_id,
-          log_id: item.log_id,
-          type: item.details?.[0]?.Purpose_of_Visit || "-",
+           id: item.company_unique_log_id,
+          log_id: item.log_id,          
+          type: `${item.details[0].System} - ${item.details[0].Purpose_of_Visit}`,
           engineer: item.engineer || "-",
-          customer: item.customer_company || "-",
+          company: item.customer_company || "-",
           building: item.building || "-",
-          date: item.created_at
-            ? new Date(item.created_at).toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
-            : "-",
+          postcode:  item.postcode || "-",
         }));
 
         setLogs(recentLogsData);
@@ -685,74 +679,64 @@ export default function Dashboard() {
             <div className="card overflow-hidden rounded-xl">
               <div className="m-4 sm:m-6">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                  Today Log
+                  Log of the Day
                 </h3>
               </div>
 
               <div className="w-full overflow-x-auto">
                 <table className="min-w-[900px] w-full border border-gray-200 text-left text-sm dark:border-gray-800">
                   <thead>
-                    <tr className="border-b border-gray-100 dark:border-gray-800">
-                      {[
-                        ["id", "Log ID"],
-                        ["type", "Purpose of Visit"],
-                        ["engineer", "Engineer"],
-                        ["customer", "Customer"],
-                        ["building", "Building"],
-                        ["date", "Date"],
-                      ].map(([k, label]) => (
-                        <th
-                          key={k}
-                          className="table-th cursor-pointer whitespace-nowrap"
-                          onClick={() => handleSort(k)}
-                        >
-                          {label}
-                        </th>
-                      ))}
-
-                      <th className="table-th whitespace-nowrap">Action</th>
+                  <tr className="border-b border-gray-100 dark:border-gray-800"
+                       onClick={() => handleSort("log_id")}                
+                    >
+                                        
+                <th className="table-th whitespace-nowrap">
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 font-semibold"
+                  >
+                    Log ID
+                  </button>
+                </th>
+            
+                <th className="table-th whitespace-nowrap">
+                  System & Purpose
+                </th>
+                <th className="table-th whitespace-nowrap">Building</th>
+                <th className="table-th whitespace-nowrap">Postcode</th>
+                <th className="table-th whitespace-nowrap">Engineer</th>
+                                
                     </tr>
                   </thead>
 
                   <tbody>
-                    {logs.length > 0 ? (
+                      {logs.length > 0 ? (
                       logs.map((row) => (
                         <tr key={row.log_id || row.id} className="table-row">
                           <td onClick={() => getLogById(row.log_id)} className="px-6 py-4 text-sm cursor-pointer whitespace-nowrap font-medium text-blue-600 ">
 
                             {row.id}
                           </td>
-
+ 
                           <td className="table-td whitespace-nowrap">
                             {row.type}
-                          </td>
-                          <td className="table-td whitespace-nowrap">
-                            {row.engineer}
-                          </td>
-                          <td className="table-td whitespace-nowrap">
-                            {row.customer}
-                          </td>
+                          </td>                     
+                        
                           <td className="table-td whitespace-nowrap">
                             {row.building}
                           </td>
-                          <td className="table-td whitespace-nowrap">
-                            {row.date}
+<td className="table-td whitespace-nowrap">
+                            {row.postcode}
                           </td>
-                          <td className="table-td whitespace-nowrap">
-                            <button
-                              type="button"
-                              onClick={() => getLogById(row.log_id)}
-                              className="text-green-500 hover:text-green-700"
-                            >
-                              <EyeIcon />
-                            </button>
+                           <td className="table-td whitespace-nowrap">
+                            {row.engineer}
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
                         <td
-                          colSpan={7}
+                          colSpan={6}
                           className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400"
                         >
                           {loading ? "Loading..." : "No Today Log found"}
@@ -770,155 +754,164 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-      <PopupModal
-        open={viewModalOpen}
-        onClose={closeViewModal}
-        maxWidth="max-w-[900px]"
-        className="px-3 py-4 sm:px-4 sm:py-6"
-        bodyClassName="max-h-[92vh] p-5 sm:p-8"
-      >
-        <button
-          type="button"
-          onClick={closeViewModal}
-          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl leading-none text-gray-400 transition hover:bg-gray-200 hover:text-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
-        >
-          ×
-        </button>
-
-        <div className="mb-6 pr-12">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
-            View Log Details
-          </h2>
-          <div className="mt-1 flex justify-between text-sm text-gray-500 dark:text-gray-400">
-            <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-
-              {selectedLog?.log_id
-                ? <>
-                  <span className="font-semibold">LOG ID :</span> {formatLogIdWithPrefix(selectedLog)}
-                </>
-                : "Loading log information"
-              }
-
-            </span>
-            <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-
-              {selectedLog?.entry_date
-                ? <>
-                  <span className="font-semibold">Create Date :</span> {formatDateTime(selectedLog?.entry_date)}
-                </>
-                : "Loading log information"
-              }
-
-            </span>
-            <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {selectedLog?.entry_on_place !== undefined &&
-                selectedLog?.entry_on_place !== null ? (
-                <>
-                  <span className="font-semibold">Generate Via:</span>{" "}
-                  {Number(selectedLog.entry_on_place) === 0
-                    ? "Manual"
-                    : Number(selectedLog.entry_on_place) === 1
-                      ? "Scanner"
-                      : Number(selectedLog.entry_on_place) === 2
-                        ? "Mobile Manual"
-                        : ""}
-                </>
-              ) : null}
-            </span>
-
-            
-          </div>
-        </div>
-
-        {viewLoading ? (
-          <div className="py-10 text-center text-gray-500 dark:text-gray-400">
-            Loading log details...
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6">
-              <h3 className="mb-5 text-base font-semibold text-gray-900 dark:text-white">
-                Building Information
-              </h3>
-
-              <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
-
-
-
-                <Info
-                  label="Building Name"
-                  value={selectedLog?.building_name}
-                />
-                <Info label="Postcode" value={selectedLog?.postcode} />
-                <Info label="Country" value={selectedLog?.country_name} />
-                <Info label="State" value={selectedLog?.state_name} />
-                <Info label="City" value={selectedLog?.city_name} />
-                <Info label="Landmark" value={selectedLog?.landmark} />
-
-
-                <Info label="Address" value={selectedLog?.address} />
-
-              </div>
-            </div>
-
-            {selectedLog?.maintenance_entries?.length > 0 ? (
-              selectedLog.maintenance_entries.map((entry) => (
-                <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6">
-                  <h3 className="mb-5 text-base font-semibold text-gray-900 dark:text-white">
-                    {entry?.component_name}
-                  </h3>
-
-                  <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
-
-                    <Info
-                      label="Purpose of Visit"
-                      value={entry?.maintenance_cycle_name}
-                    />
-                    <Info
-                      label="Date"
-                      value={formatDate(entry?.entry_date)}
-                    />
-                    <Info
-                      label="start Time"
-                      value={`${formatOnlyTime(entry?.start_time)} `}
-                    />
-                    <Info
-                      label="End Time"
-                      value={`${formatOnlyTime(
-                        entry?.finish_time,
-                      )} `}
-                    />
-                    <Info label="Remidial Action Taken" value={entry?.remark || "-"} />
-                  </div>
-                </div>
-
-              ))
-            ) : (
-              <div className="rounded-2xl border border-gray-200 p-4 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                No maintenance entries found
-              </div>
-            )}
-
-
-            <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6">
-              <h3 className="mb-5 text-base font-semibold text-gray-900 dark:text-white">
-                Engineer Information
-              </h3>
-
-              <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
-                <Info
-                  label="Engineer Name"
-                  value={selectedLog?.created_by_name}
-                />
-                <Info
-                  label="Engineer Email"
-                  value={selectedLog?.created_by_email}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </PopupModal>
+   <PopupModal
+         open={viewModalOpen}
+         onClose={closeViewModal}
+         maxWidth="max-w-[900px]"
+         className="px-3 py-4 sm:px-4 sm:py-6"
+         bodyClassName="max-h-[92vh] p-5 sm:p-8"
+       >
+         <button
+           type="button"
+           onClick={closeViewModal}
+           className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl leading-none text-gray-400 transition hover:bg-gray-200 hover:text-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
+         >
+           ×
+         </button>
+ 
+         <div className="mb-6 pr-12">
+           <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+             View Log Details
+           </h2>
+           <div className="mt-1 flex justify-between text-sm text-gray-500 dark:text-gray-400">
+             <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+ 
+               {selectedLog?.log_id
+                 ? <>
+                   <span className="font-semibold">LOG ID :</span> {formatLogIdWithPrefix(selectedLog)}
+                 </>
+                 : "Loading log information"
+               }
+ 
+             </span>
+             <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+ 
+               {selectedLog?.entry_date
+                 ? <>
+                   <span className="font-semibold">Create Date :</span> {formatDateTime(selectedLog?.entry_date)}
+                 </>
+                 : "Loading log information"
+               }
+ 
+             </span>
+             <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+               {selectedLog?.entry_on_place !== undefined &&
+                 selectedLog?.entry_on_place !== null ? (
+                 <>
+                   <span className="font-semibold">Generate Via:</span>{" "}
+                   {Number(selectedLog.entry_on_place) === 0
+                     ? "Manual"
+                     : Number(selectedLog.entry_on_place) === 1
+                       ? "Scanner"
+                       : Number(selectedLog.entry_on_place) === 2
+                         ? "Mobile Manual"
+                         : ""}
+                 </>
+               ) : null}
+             </span>
+           </div>
+         </div>
+ 
+         {viewLoading ? (
+           <div className="py-10 text-center text-gray-500 dark:text-gray-400">
+             Loading log details...
+           </div>
+         ) : (
+           <div className="space-y-6">
+             <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6">
+               <h3 className="mb-5 text-base font-semibold text-gray-900 dark:text-white">
+                 Customer & Building Information
+               </h3>
+ 
+               <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
+ 
+                 <Info
+                   label="Company Name"
+                   value={selectedLog?.customer_name}
+                 />
+ 
+                 <Info
+                   label="Building Name"
+                   value={selectedLog?.building_name}
+                 />
+                 <Info label="UPRN" value={selectedLog?.uprn_no} />    
+                 <Info label="Address Line 1" value={selectedLog?.address} />
+                 <Info label="Address Line 2" value={selectedLog?.address_line_2} />
+                 <Info label="Country" value={selectedLog?.country_name} />
+                  {!["uk", "united kingdom","United Kingdom"].includes(
+                   selectedLog?.country_name?.toLowerCase()
+                 ) && (
+                     <Info
+                       label="State"
+                       value={selectedLog?.state_name}
+                     />
+                   )}
+                 <Info label="City" value={selectedLog?.city_name} />
+                  <Info label="Postcode" value={selectedLog?.postcode} />
+                 <Info label="Access Information" value={selectedLog?.landmark} />
+ 
+ 
+               </div>
+             </div>
+ 
+             {selectedLog?.maintenance_entries?.length > 0 ? (
+               selectedLog.maintenance_entries.map((entry) => (
+                 <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6">
+                   <h3 className="mb-5 text-base font-semibold text-gray-900 dark:text-white">
+                     {entry?.component_name}
+                   </h3>
+ 
+                   <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
+ 
+                     <Info
+                       label="Purpose of Visit"
+                       value={entry?.maintenance_cycle_name}
+                     />
+                     <Info
+                       label="Date"
+                       value={formatDate(entry?.entry_date)}
+                     />
+                     <Info
+                       label="Start Time"
+                       value={`${formatOnlyTime(entry?.start_time)} `}
+                     />
+                     <Info
+                       label="End Time"
+                       value={`${formatOnlyTime(
+                         entry?.finish_time,
+                       )} `}
+                     />
+                     <Info label="Remidial Action Taken" value={entry?.remark || "-"} />
+                   </div>
+                 </div>
+ 
+               ))
+             ) : (
+               <div className="rounded-2xl border border-gray-200 p-4 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                 No maintenance entries found
+               </div>
+             )}
+ 
+ 
+             <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6">
+               <h3 className="mb-5 text-base font-semibold text-gray-900 dark:text-white">
+                 Engineer Information
+               </h3>
+ 
+               <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
+                 <Info
+                   label="Engineer Name"
+                   value={selectedLog?.created_by_name}
+                 />
+                 <Info
+                   label="Engineer Email"
+                   value={selectedLog?.created_by_email}
+                 />
+               </div>
+             </div>
+           </div>
+         )}
+       </PopupModal>
     </>
   );
 }

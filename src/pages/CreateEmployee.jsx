@@ -57,7 +57,7 @@ const fields = [
 
 export default function CreateEmployee() {
   const navigate = useNavigate();
-  const [errors, setErrors] = useState({}); 
+  const [errors, setErrors] = useState({});
   const [searchParams] = useSearchParams();
 
   const employeeId = searchParams.get("employee_id");
@@ -82,7 +82,7 @@ export default function CreateEmployee() {
     mobilenumber: "",
     postcode: "",
     address: "",
-    address_line_2:"",
+    address_line_2: "",
     country: "",
     state: "",
     city: "",
@@ -97,6 +97,10 @@ export default function CreateEmployee() {
   const [employeeLoading, setEmployeeLoading] = useState(false);
   const [canShowQRCodeAccess, setCanShowQRCodeAccess] = useState(false);
   const [permissionLoading, setPermissionLoading] = useState(false);
+
+  const [newCityName, setNewCityName] = useState("");
+  const [addCityLoading, setAddCityLoading] = useState(false);
+
   const authUser = JSON.parse(localStorage.getItem("auth_user") || "{}");
 
   const states = statesByCountry[String(form.country)] || [];
@@ -136,17 +140,17 @@ export default function CreateEmployee() {
     String(form.role) === "3" ||
     selectedRole?.name?.trim().toLowerCase() === "customer";
 
-const update = (key, value) => {
-  setForm((prev) => ({
-    ...prev,
-    [key]: value,
-  }));
+  const update = (key, value) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
 
-  setErrors((prev) => ({
-    ...prev,
-    [key]: "",
-  }));
-};
+    setErrors((prev) => ({
+      ...prev,
+      [key]: "",
+    }));
+  };
   const checkLogManagementPermission = async (roleId, clearQrValue = true) => {
     if (!roleId) {
       setCanShowQRCodeAccess(false);
@@ -331,6 +335,8 @@ const update = (key, value) => {
       city: "",
     }));
 
+    setNewCityName("");
+
     if (countryId) {
       await getStateList(countryId);
     }
@@ -348,8 +354,78 @@ const update = (key, value) => {
       city: "",
     }));
 
+    setNewCityName("");
+
     if (stateId) {
       await getCityList(stateId);
+    }
+  };
+
+  const handleCityChange = (cityId) => {
+    update("city", cityId);
+
+    if (cityId !== "other") {
+      setNewCityName("");
+    }
+  };
+
+  const handleAddCity = async () => {
+    const cityName = newCityName.trim();
+
+    if (!cityName) {
+      toast.error("Please enter city name.");
+      return;
+    }
+
+    const stateIdForCity = isUK ? "37" : form.state;
+
+    if (!stateIdForCity) {
+      toast.error("Please select state first.");
+      return;
+    }
+
+    try {
+      setAddCityLoading(true);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/insertcity`,
+        {
+          stateid: Number(stateIdForCity),
+          cityname: cityName,
+        },
+        {
+          headers: getAuthHeaders(),
+        },
+      );
+
+      if (response?.data?.success) {
+        toast.success(response?.data?.message || "City added successfully");
+
+        const newCityId =
+          response?.data?.data?.cityId ||
+          response?.data?.data?.cityid ||
+          response?.data?.data?.iCityId;
+
+        await getCityList(stateIdForCity, true);
+
+        setForm((prev) => ({
+          ...prev,
+          city: newCityId ? String(newCityId) : "",
+        }));
+
+        setNewCityName("");
+      } else {
+        toast.error(response?.data?.message || "Failed to add city.");
+      }
+    } catch (error) {
+      const msg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to add city.";
+
+      toast.error(msg);
+    } finally {
+      setAddCityLoading(false);
     }
   };
 
@@ -362,7 +438,7 @@ const update = (key, value) => {
       mobilenumber: "",
       postcode: "",
       address: "",
-      address_line_2:"",
+      address_line_2: "",
       country: "",
       state: "",
       city: "",
@@ -370,6 +446,7 @@ const update = (key, value) => {
     });
 
     setOldSignatureUrl("");
+    setNewCityName("");
 
     const fileInput = document.getElementById("uploadsignatureimg");
     if (fileInput) {
@@ -411,61 +488,61 @@ const update = (key, value) => {
   };
 
   const validateForm = () => {
-  const newErrors = {};
+    const newErrors = {};
 
-  if (!form.name.trim()) {
-    newErrors.name = "Employee Name is required";
-  }
+    if (!form.name.trim()) {
+      newErrors.name = "Employee Name is required";
+    }
 
-  if (!form.role) {
-    newErrors.role = "Role is required";
-  }
+    if (!form.role) {
+      newErrors.role = "Role is required";
+    }
 
-  if (canShowQRCodeAccess && form.qrcodeaccess === "") {
-    newErrors.qrcodeaccess = "QR Code Access is required";
-  }
+    if (canShowQRCodeAccess && form.qrcodeaccess === "") {
+      newErrors.qrcodeaccess = "QR Code Access is required";
+    }
 
-  if (!form.email.trim()) {
-    newErrors.email = "Email is required";
-  }
+    if (!form.email.trim()) {
+      newErrors.email = "Email is required";
+    }
 
-  if (!form.mobilenumber.trim()) {
-    newErrors.mobilenumber = "Contact Number is required";
-  }
+    if (!form.mobilenumber.trim()) {
+      newErrors.mobilenumber = "Contact Number is required";
+    }
 
-  if (!form.postcode.trim()) {
-    newErrors.postcode = "Post Code is required";
-  }
+    if (!form.postcode.trim()) {
+      newErrors.postcode = "Post Code is required";
+    }
 
-  if (!form.address.trim()) {
-    newErrors.address = "Address is required";
-  }
+    if (!form.address.trim()) {
+      newErrors.address = "Address is required";
+    }
 
-  if (!form.country) {
-    newErrors.country = "Country is required";
-  }
+    if (!form.country) {
+      newErrors.country = "Country is required";
+    }
 
-  if (!isUK && !form.state) {
-    newErrors.state = "State is required";
-  }
+    if (!isUK && !form.state) {
+      newErrors.state = "State is required";
+    }
 
-  if (!form.city) {
-    newErrors.city = "City is required";
-  }
+    if (!form.city || form.city === "other") {
+      newErrors.city = "City is required";
+    }
 
-  if (canShowQRCodeAccess && !form.uploadsignatureimg && !oldSignatureUrl) {
-    newErrors.uploadsignatureimg = "Signature is required";
-  }
+    if (canShowQRCodeAccess && !form.uploadsignatureimg && !oldSignatureUrl) {
+      newErrors.uploadsignatureimg = "Signature is required";
+    }
 
-  setErrors(newErrors);
+    setErrors(newErrors);
 
-  if (Object.keys(newErrors).length > 0) {
-    toast.error("Please fill all required fields.");
-    return false;
-  }
+    if (Object.keys(newErrors).length > 0) {
+      toast.error("Please fill all required fields.");
+      return false;
+    }
 
-  return true;
-};
+    return true;
+  };
 
   const handleSave = async () => {
     if (!validateForm()) return;
@@ -607,9 +684,8 @@ const update = (key, value) => {
                     {field.type === "role" ? (
                       <div className="relative">
                         <select
-                          className={`form-select ${
-  errors[field.key] ? "border-red-500 focus:border-red-500" : ""
-}`}
+                          className={`form-select ${errors[field.key] ? "border-red-500 focus:border-red-500" : ""
+                            }`}
                           value={form.role || ""}
                           // onChange={(e) => update("role", e.target.value)}
                           onChange={async (e) => {
@@ -730,28 +806,54 @@ const update = (key, value) => {
                         <SelectArrow />
                       </div>
                     ) : field.type === "city" ? (
-                      <div className="relative">
-                        <select
-                          className="form-select"
-                          value={form.city || ""}
-                          onChange={(e) => update("city", e.target.value)}
-                          disabled={(!form.state && !isUK) || cityLoading}
-                        >
-                          <option value="">
-                            {cityLoading
-                              ? "Loading cities..."
-                              : (form.state || isUK)
-                                ? "Select Option"
-                                : "Select state first"}
-                          </option>
-
-                          {cities.map((city) => (
-                            <option key={city.iCityId} value={city.iCityId}>
-                              {city.strCityName}
+                      <div>
+                        <div className="relative">
+                          <select
+                            className={`form-select ${errors[field.key] ? "border-red-500 focus:border-red-500" : ""
+                              }`}
+                            value={form.city || ""}
+                            onChange={(e) => handleCityChange(e.target.value)}
+                            disabled={(!form.state && !isUK) || cityLoading}
+                          >
+                            <option value="">
+                              {cityLoading
+                                ? "Loading cities..."
+                                : (form.state || isUK)
+                                  ? "Select Option"
+                                  : "Select state first"}
                             </option>
-                          ))}
-                        </select>
-                        <SelectArrow />
+
+                            {cities.map((city) => (
+                              <option key={city.iCityId} value={city.iCityId}>
+                                {city.strCityName}
+                              </option>
+                            ))}
+
+                            {(form.state || isUK) && <option value="other">Other</option>}
+                          </select>
+                          <SelectArrow />
+                        </div>
+
+                        {form.city === "other" && (
+                          <div className="mt-3 flex gap-3">
+                            <input
+                              type="text"
+                              className="form-input"
+                              placeholder="Enter new city"
+                              value={newCityName}
+                              onChange={(e) => setNewCityName(e.target.value)}
+                            />
+
+                            <button
+                              type="button"
+                              onClick={handleAddCity}
+                              disabled={addCityLoading}
+                              className="btn-primary whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                              {addCityLoading ? "Adding..." : "Add City"}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ) : field.type === "file" ? (
                       <div className="mx-auto w-full max-w-md">
@@ -786,9 +888,8 @@ const update = (key, value) => {
                     ) : (
                       <input
                         type="text"
-                       className={`form-input ${
-  errors[field.key] ? "border-red-500 focus:border-red-500" : ""
-}`}
+                        className={`form-input ${errors[field.key] ? "border-red-500 focus:border-red-500" : ""
+                          }`}
                         value={form[field.key] || ""}
                         onChange={(e) => update(field.key, e.target.value)}
                       />

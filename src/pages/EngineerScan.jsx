@@ -1745,7 +1745,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
-import logo from "../assets/images/logo/logo.svg";
+import logo from "../assets/images/logo/logo-new-dark.png";
 import { FiArrowRight } from "react-icons/fi";
 import axios from "axios";
 import { apiUrl } from "../config";
