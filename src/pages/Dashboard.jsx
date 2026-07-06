@@ -307,14 +307,14 @@ export default function Dashboard() {
         setDashboardData(data);
 
         const recentLogs = (data?.recent_logs || []).map((item) => ({
-          // id: `FS-${String(item.log_id).padStart(4, "0")}`,
+          // id: `FS-${String(item.log_id).padStart(4, "0")}`,          
           id: item.company_unique_log_id,
-          log_id: item.log_id,
-          type: item.details?.[0]?.Purpose_of_Visit || "-",
+          log_id: item.log_id,          
+          type: `${item.details[0].System} - ${item.details[0].Purpose_of_Visit}`,
           engineer: item.engineer || "-",
           company: item.customer_company || "-",
           building: item.building || "-",
-          created_at: item.created_at || "",
+          postcode:  item.postcode || "-",
         }));
 
         setLogs(recentLogs);
@@ -392,7 +392,7 @@ export default function Dashboard() {
         icon: <LogIcon />,
       },
       {
-        label: "Components",
+        label: "System",
         value: summary.total_components || 0,
         icon: <ComponentIcon />,
       },
@@ -728,31 +728,35 @@ export default function Dashboard() {
             <div className="card overflow-hidden rounded-xl">
               <div className="m-4 flex flex-col gap-4 sm:m-5 md:m-6 md:flex-row md:items-center">
                 <h3 className="text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
-                  Today Log
+                 Log of the Day
                 </h3>
               </div>
 
               <div className="w-full overflow-x-auto">
                 <table className="min-w-[700px] w-full border border-gray-200 text-left text-sm dark:border-gray-800">
                   <thead>
-                    <tr className="border-b border-gray-100 dark:border-gray-800">
-                      {[
-                        ["id", "Log ID"],
-                        ["type", "Purpose of Visit"],
-                        ["engineer", "Engineer"],
-                        ["company", "Customer Company"],
-                        ["building", "Building"],
-                      ].map(([k, label]) => (
-                        <th
-                          key={k}
-                          className="table-th cursor-pointer whitespace-nowrap"
-                          onClick={() => handleSort(k)}
-                        >
-                          {label}
-                        </th>
-                      ))}
-
-                      <th className="table-th whitespace-nowrap">Action</th>
+                    <tr className="border-b border-gray-100 dark:border-gray-800"
+                       onClick={() => handleSort("log_id")}                
+                    >
+                                        
+                <th className="table-th whitespace-nowrap">
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 font-semibold"
+                  >
+                    Log ID
+                  </button>
+                </th>
+                 {/* { (authUser.role_id === 1 || authUser.customer?.customer_id === null) && ( */}
+                  <th className="table-th whitespace-nowrap">Company Name </th>
+                {/* )}  */}
+                <th className="table-th whitespace-nowrap">
+                  System & Purpose
+                </th>
+                <th className="table-th whitespace-nowrap">Building</th>
+                <th className="table-th whitespace-nowrap">Postcode</th>
+                <th className="table-th whitespace-nowrap">Engineer</th>
+                                
                     </tr>
                   </thead>
 
@@ -764,28 +768,21 @@ export default function Dashboard() {
 
                             {row.id}
                           </td>
-
-                          <td className="table-td whitespace-nowrap">
-                            {row.type}
-                          </td>
-                          <td className="table-td whitespace-nowrap">
-                            {row.engineer}
-                          </td>
-                          <td className="table-td whitespace-nowrap">
+  <td className="table-td whitespace-nowrap">
                             {row.company}
                           </td>
                           <td className="table-td whitespace-nowrap">
+                            {row.type}
+                          </td>                     
+                        
+                          <td className="table-td whitespace-nowrap">
                             {row.building}
                           </td>
-
-                          <td className="table-td whitespace-nowrap">
-                            <button
-                              type="button"
-                              onClick={() => getLogById(row.log_id)}
-                              className="text-green-500 transition-colors hover:text-green-700"
-                            >
-                              <EyeIcon />
-                            </button>
+<td className="table-td whitespace-nowrap">
+                            {row.postcode}
+                          </td>
+                           <td className="table-td whitespace-nowrap">
+                            {row.engineer}
                           </td>
                         </tr>
                       ))
@@ -882,7 +879,7 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
 
                 <Info
-                  label="Customer Name"
+                  label="Company Name"
                   value={selectedLog?.customer_name}
                 />
 
@@ -890,14 +887,22 @@ export default function Dashboard() {
                   label="Building Name"
                   value={selectedLog?.building_name}
                 />
-                <Info label="Postcode" value={selectedLog?.postcode} />
+                <Info label="UPRN" value={selectedLog?.uprn_no} />    
+                <Info label="Address Line 1" value={selectedLog?.address} />
+                <Info label="Address Line 2" value={selectedLog?.address_line_2} />
                 <Info label="Country" value={selectedLog?.country_name} />
-                <Info label="State" value={selectedLog?.state_name} />
+                 {!["uk", "united kingdom","United Kingdom"].includes(
+                  selectedLog?.country_name?.toLowerCase()
+                ) && (
+                    <Info
+                      label="State"
+                      value={selectedLog?.state_name}
+                    />
+                  )}
                 <Info label="City" value={selectedLog?.city_name} />
-                <Info label="Landmark" value={selectedLog?.landmark} />
+                 <Info label="Postcode" value={selectedLog?.postcode} />
+                <Info label="Access Information" value={selectedLog?.landmark} />
 
-
-                <Info label="Address" value={selectedLog?.address} />
 
               </div>
             </div>
@@ -920,7 +925,7 @@ export default function Dashboard() {
                       value={formatDate(entry?.entry_date)}
                     />
                     <Info
-                      label="start Time"
+                      label="Start Time"
                       value={`${formatOnlyTime(entry?.start_time)} `}
                     />
                     <Info

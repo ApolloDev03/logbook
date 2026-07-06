@@ -30,6 +30,9 @@ const SelectArrow = () => (
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 
 import { format } from "date-fns";
 import { IoTrashBinSharp } from "react-icons/io5";
@@ -535,36 +538,148 @@ function UniqueDatePicker({
   };
 
   return (
-    <div className="relative" ref={pickerRef}>
-      <label className="form-label">{label}</label>
+    <>
+      <style>
+                {`
+              .react-datepicker {
+          border: none;
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+          font-family: inherit;
+        }
 
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className="form-input flex w-full items-center justify-between text-left"
-      >
-        <span
-          className={value ? "text-gray-900 dark:text-white" : "text-gray-400"}
+        .react-datepicker__header {
+          background: #fff;
+          border-bottom: 1px solid #e5e7eb;
+          padding: 15px 18px;
+        }
+
+        .calendar-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .calendar-title {
+          font-size: 24px;
+          font-weight: 700;
+          color: #111827;
+        }
+
+        .calendar-arrow {
+          width: 34px;
+          height: 34px;
+          border: none;
+          background: transparent;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 22px;
+        }
+
+        .calendar-arrow:hover {
+          background: #f3f4f6;
+        }
+
+        .react-datepicker__navigation {
+          display: none;
+        }
+
+        .react-datepicker__current-month {
+          display: none;
+        }
+
+        .react-datepicker__day-name {
+          width: 2.6rem;
+          line-height: 2.6rem;
+          font-weight: 600;
+          color: #6b7280;
+        }
+
+        .react-datepicker__day {
+          width: 2.6rem;
+          line-height: 2.6rem;
+          margin: 2px;
+          border-radius: 8px;
+        }
+
+        .react-datepicker__day:hover {
+          background: #f3f4f6;
+        }
+
+        .react-datepicker__day--selected {
+          background: #2563eb !important;
+          color: #fff !important;
+        }
+
+        .react-datepicker__day--keyboard-selected {
+          background: #2563eb !important;
+          color: #fff !important;
+        }
+              `}
+      </style>
+      <div className="relative" ref={pickerRef}>
+        <label className="form-label">{label}</label>
+
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          className="form-input flex w-full items-center justify-between text-left"
         >
-          {displayDate}
-        </span>
+          <span
+            className={value ? "text-gray-900 dark:text-white" : "text-gray-400"}
+          >
+            {displayDate}
+          </span>
 
-        <CalendarIcon />
-      </button>
+          <CalendarIcon />
+        </button>
 
-      {open && (
-        <div className="absolute left-0 top-full z-[9999] mt-2 w-auto rounded-xl bg-white p-3 shadow-2xl dark:bg-gray-900">
-          <div className="single-date-responsive">
-            <Calendar
-              date={selectedDate || minimumDate}
-              onChange={handleDateSelect}
-              maxDate={minimumDate}
-              color="#3b82f6"
-            />
+        {open && (
+          <div className="absolute left-0 top-full z-[9999] mt-2 w-auto rounded-xl bg-white p-3 shadow-2xl dark:bg-gray-900">
+            <div className="single-date-responsive">
+              <DatePicker
+                selected={selectedDate}
+                onChange={(date) => handleDateSelect(date)}
+                maxDate={minimumDate}
+                inline
+                renderCustomHeader={({
+                  date,
+                  decreaseMonth,
+                  increaseMonth,
+                  prevMonthButtonDisabled,
+                  nextMonthButtonDisabled,
+                }) => (
+                  <div className="calendar-header">
+                    <button
+                      type="button"
+                      onClick={decreaseMonth}
+                      disabled={prevMonthButtonDisabled}
+                      className="calendar-arrow"
+                    >
+                      &#10094;
+                    </button>
+
+                    <span className="calendar-title">
+                      {format(date, "MMMM yyyy")}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={increaseMonth}
+                      disabled={nextMonthButtonDisabled}
+                      className="calendar-arrow"
+                    >
+                      &#10095;
+                    </button>
+                  </div>
+                )}
+              />
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }
 

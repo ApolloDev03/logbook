@@ -659,6 +659,9 @@ export default function CreateCustomer() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(false);
 
+  const [newCityName, setNewCityName] = useState("");
+  const [addCityLoading, setAddCityLoading] = useState(false);
+
   const states = statesByCountry[String(form.country)] || [];
   const cities = citiesByState[String(form.state)] || [];
 
@@ -711,6 +714,8 @@ export default function CreateCustomer() {
       city: "",
     }));
 
+    setNewCityName("");
+
     if (countryId) {
       await getStateList(countryId);
     }
@@ -728,8 +733,78 @@ export default function CreateCustomer() {
       city: "",
     }));
 
+    setNewCityName("");
+
     if (stateId) {
       await getCityList(stateId);
+    }
+  };
+
+  const handleCityChange = (cityId) => {
+    update("city", cityId);
+
+    if (cityId !== "other") {
+      setNewCityName("");
+    }
+  };
+
+  const handleAddCity = async () => {
+    const cityName = newCityName.trim();
+
+    if (!cityName) {
+      toast.error("Please enter city name.");
+      return;
+    }
+
+    const stateIdForCity = isUK ? "37" : form.state;
+
+    if (!stateIdForCity) {
+      toast.error("Please select state first.");
+      return;
+    }
+
+    try {
+      setAddCityLoading(true);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/insertcity`,
+        {
+          stateid: Number(stateIdForCity),
+          cityname: cityName,
+        },
+        {
+          headers: getAuthHeaders(),
+        },
+      );
+
+      if (response?.data?.success) {
+        toast.success(response?.data?.message || "City added successfully");
+
+        const newCityId =
+          response?.data?.data?.cityId ||
+          response?.data?.data?.cityid ||
+          response?.data?.data?.iCityId;
+
+        await getCityList(stateIdForCity, true);
+
+        setForm((prev) => ({
+          ...prev,
+          city: newCityId ? String(newCityId) : "",
+        }));
+
+        setNewCityName("");
+      } else {
+        toast.error(response?.data?.message || "Failed to add city.");
+      }
+    } catch (error) {
+      const msg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to add city.";
+
+      toast.error(msg);
+    } finally {
+      setAddCityLoading(false);
     }
   };
 
@@ -752,6 +827,7 @@ export default function CreateCustomer() {
 
     setCompanyLogoPreview("");
     setCompanyLogoIconPreview("");
+    setNewCityName("");
 
     const logoInput = document.getElementById("customer_company_logo");
     const iconInput = document.getElementById("customer_company_logo_icon");
@@ -824,7 +900,7 @@ export default function CreateCustomer() {
       return false;
     }
 
-    if (!form.city) {
+    if (!form.city || form.city === "other") {
       toast.error("Please select city.");
       return false;
     }
@@ -1009,7 +1085,7 @@ export default function CreateCustomer() {
       </div>
 
       <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
-        
+
         {/* <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {fields
             .filter((field) => {
@@ -1174,205 +1250,230 @@ export default function CreateCustomer() {
         </div> */}
 
         {/* Company Information Card */}
-<div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
-  <h3 className="mb-6 text-lg font-semibold text-gray-900 dark:text-white">
-    Company Information
-  </h3>
+        <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+          <h3 className="mb-6 text-lg font-semibold text-gray-900 dark:text-white">
+            Company Information
+          </h3>
 
-  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-    {fields
-      .filter(
-        (field) =>
-          companyFields.includes(field.key) &&
-          !(field.key === "state" && isUK)
-      )
-      .map((field) => (
-        <div key={field.key}>
-          <label className="form-label flex items-center gap-2">
-            <span>
-              {field.label}
-              {isRequiredField(field) && (
-                <span className="ml-1 text-red-500">*</span>
-              )}
-            </span>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {fields
+              .filter(
+                (field) =>
+                  companyFields.includes(field.key) &&
+                  !(field.key === "state" && isUK)
+              )
+              .map((field) => (
+                <div key={field.key}>
+                  <label className="form-label flex items-center gap-2">
+                    <span>
+                      {field.label}
+                      {isRequiredField(field) && (
+                        <span className="ml-1 text-red-500">*</span>
+                      )}
+                    </span>
 
-            {field.key === "prefix" && (
-              <span className="text-xs font-normal text-gray-500 dark:text-gray-400">
-                (Max 3 letters)
-              </span>
-            )}
-          </label>
+                    {field.key === "prefix" && (
+                      <span className="text-xs font-normal text-gray-500 dark:text-gray-400">
+                        (Max 3 letters)
+                      </span>
+                    )}
+                  </label>
 
-          {field.type === "country" ? (
-            <div className="relative">
-              <select
-                className="form-select"
-                value={form.country || ""}
-                onChange={(e) => handleCountryChange(e.target.value)}
-                disabled={countryLoading}
-              >
-                <option value="">
-                  {countryLoading ? "Loading countries..." : "Select Option"}
-                </option>
+                  {field.type === "country" ? (
+                    <div className="relative">
+                      <select
+                        className="form-select"
+                        value={form.country || ""}
+                        onChange={(e) => handleCountryChange(e.target.value)}
+                        disabled={countryLoading}
+                      >
+                        <option value="">
+                          {countryLoading ? "Loading countries..." : "Select Option"}
+                        </option>
 
-                {countries.map((country) => (
-                  <option
-                    key={country.countryid}
-                    value={country.countryid}
-                  >
-                    {country.country_name}
-                  </option>
-                ))}
-              </select>
-              <SelectArrow />
-            </div>
-          ) : field.type === "state" ? (
-            <div className="relative">
-              <select
-                className="form-select"
-                value={form.state || ""}
-                onChange={(e) => handleStateChange(e.target.value)}
-                disabled={!form.country || stateLoading}
-              >
-                <option value="">
-                  {stateLoading
-                    ? "Loading states..."
-                    : form.country
-                    ? "Select Option"
-                    : "Select country first"}
-                </option>
+                        {countries.map((country) => (
+                          <option
+                            key={country.countryid}
+                            value={country.countryid}
+                          >
+                            {country.country_name}
+                          </option>
+                        ))}
+                      </select>
+                      <SelectArrow />
+                    </div>
+                  ) : field.type === "state" ? (
+                    <div className="relative">
+                      <select
+                        className="form-select"
+                        value={form.state || ""}
+                        onChange={(e) => handleStateChange(e.target.value)}
+                        disabled={!form.country || stateLoading}
+                      >
+                        <option value="">
+                          {stateLoading
+                            ? "Loading states..."
+                            : form.country
+                              ? "Select Option"
+                              : "Select country first"}
+                        </option>
 
-                {states.map((state) => (
-                  <option key={state.iStateId} value={state.iStateId}>
-                    {state.strStateName}
-                  </option>
-                ))}
-              </select>
-              <SelectArrow />
-            </div>
-          ) : field.type === "city" ? (
-            <div className="relative">
-              <select
-                className="form-select"
-                value={form.city || ""}
-                onChange={(e) => update("city", e.target.value)}
-                disabled={!form.state || cityLoading}
-              >
-                <option value="">
-                  {cityLoading
-                    ? "Loading cities..."
-                    : form.state
-                    ? "Select Option"
-                    : "Select state first"}
-                </option>
+                        {states.map((state) => (
+                          <option key={state.iStateId} value={state.iStateId}>
+                            {state.strStateName}
+                          </option>
+                        ))}
+                      </select>
+                      <SelectArrow />
+                    </div>
+                  ) : field.type === "city" ? (
+                    <div>
+                      <div className="relative">
+                        <select
+                          className="form-select"
+                          value={form.city || ""}
+                          onChange={(e) => handleCityChange(e.target.value)}
+                          disabled={!form.state || cityLoading}
+                        >
+                          <option value="">
+                            {cityLoading
+                              ? "Loading cities..."
+                              : form.state
+                                ? "Select Option"
+                                : "Select state first"}
+                          </option>
 
-                {cities.map((city) => (
-                  <option key={city.iCityId} value={city.iCityId}>
-                    {city.strCityName}
-                  </option>
-                ))}
-              </select>
-              <SelectArrow />
-            </div>
-          ) : (
-            <input
-              type="text"
-              className="form-input"
-              value={form[field.key] || ""}
-              maxLength={field.key === "prefix" ? 3 : undefined}
-              onChange={(e) => {
-                if (field.key === "prefix") {
-                  const onlyAlpha = e.target.value
-                    .replace(/[^A-Za-z]/g, "")
-                    .slice(0, 3);
+                          {cities.map((city) => (
+                            <option key={city.iCityId} value={city.iCityId}>
+                              {city.strCityName}
+                            </option>
+                          ))}
 
-                  update(field.key, onlyAlpha.toUpperCase());
-                  return;
-                }
+                          {form.state && <option value="other">Other</option>}
+                        </select>
+                        <SelectArrow />
+                      </div>
 
-                update(field.key, e.target.value);
-              }}
-            />
-          )}
+                      {form.city === "other" && (
+                        <div className="mt-3 flex gap-3">
+                          <input
+                            type="text"
+                            className="form-input"
+                            placeholder="Enter new city"
+                            value={newCityName}
+                            onChange={(e) => setNewCityName(e.target.value)}
+                          />
+
+                          <button
+                            type="button"
+                            onClick={handleAddCity}
+                            disabled={addCityLoading}
+                            className="btn-primary whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-70"
+                          >
+                            {addCityLoading ? "Adding..." : "Add City"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={form[field.key] || ""}
+                      maxLength={field.key === "prefix" ? 3 : undefined}
+                      onChange={(e) => {
+                        if (field.key === "prefix") {
+                          const onlyAlpha = e.target.value
+                            .replace(/[^A-Za-z]/g, "")
+                            .slice(0, 3);
+
+                          update(field.key, onlyAlpha.toUpperCase());
+                          return;
+                        }
+
+                        update(field.key, e.target.value);
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+          </div>
         </div>
-      ))}
-  </div>
-</div>
 
-{/* Customer Information Card */}
-<div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
-  <h3 className="mb-6 text-lg font-semibold text-gray-900 dark:text-white">
-    Customer Information
-  </h3>
+        {/* Customer Information Card */}
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+          <h3 className="mb-6 text-lg font-semibold text-gray-900 dark:text-white">
+            Customer Information
+          </h3>
 
-  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-    {fields
-      .filter((field) => customerFields.includes(field.key))
-      .map((field) => (
-        <div key={field.key}>
-          <label className="form-label">
-            {field.label}
-            {isRequiredField(field) && (
-              <span className="ml-1 text-red-500">*</span>
-            )}
-          </label>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {fields
+              .filter((field) => customerFields.includes(field.key))
+              .map((field) => (
+                <div key={field.key}>
+                  <label className="form-label">
+                    {field.label}
+                    {isRequiredField(field) && (
+                      <span className="ml-1 text-red-500">*</span>
+                    )}
+                  </label>
 
-          {field.type === "file" ? (
-            <>
-              <input
-                id={field.key}
-                type="file"
-                accept="image/*"
-                className="block h-11 w-full cursor-pointer rounded-lg border border-gray-300 bg-white text-sm text-gray-700 shadow-sm outline-none transition
+                  {field.type === "file" ? (
+                    <>
+                      <input
+                        id={field.key}
+                        type="file"
+                        accept="image/*"
+                        className="block h-11 w-full cursor-pointer rounded-lg border border-gray-300 bg-white text-sm text-gray-700 shadow-sm outline-none transition
                 file:mr-4 file:h-full file:border-0 file:border-r file:border-gray-300 file:bg-gray-100 file:px-4 file:text-sm file:font-medium file:text-gray-700
                 hover:border-blue-400 focus:border-blue-500
                 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300
                 dark:file:border-gray-700 dark:file:bg-gray-800 dark:file:text-gray-200"
-                onChange={(e) =>
-                  handleFileChange(field.key, e.target.files?.[0] || null)
-                }
-              />
+                        onChange={(e) =>
+                          handleFileChange(field.key, e.target.files?.[0] || null)
+                        }
+                      />
 
-              {field.key === "customer_company_logo" &&
-                companyLogoPreview && (
-                  <div className="mt-3">
-                    <p className="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                      Current Company Logo
-                    </p>
-                    <img
-                      src={companyLogoPreview}
-                      alt="Company Logo"
-                      className="h-20 w-32 rounded-lg border border-gray-200 object-contain p-2 dark:border-gray-700"
-                    />
-                  </div>
-                )}
+                      {field.key === "customer_company_logo" &&
+                        companyLogoPreview && (
+                          <div className="mt-3">
+                            <p className="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+                              Current Company Logo
+                            </p>
+                            <img
+                              src={companyLogoPreview}
+                              alt="Company Logo"
+                              className="h-20 w-32 rounded-lg border border-gray-200 object-contain p-2 dark:border-gray-700"
+                            />
+                          </div>
+                        )}
 
-              {field.key === "customer_company_logo_icon" &&
-                companyLogoIconPreview && (
-                  <div className="mt-3">
-                    <p className="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                      Current Company Logo Icon
-                    </p>
-                    <img
-                      src={companyLogoIconPreview}
-                      alt="Company Logo Icon"
-                      className="h-20 w-20 rounded-lg border border-gray-200 object-contain p-2 dark:border-gray-700"
+                      {field.key === "customer_company_logo_icon" &&
+                        companyLogoIconPreview && (
+                          <div className="mt-3">
+                            <p className="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+                              Current Company Logo Icon
+                            </p>
+                            <img
+                              src={companyLogoIconPreview}
+                              alt="Company Logo Icon"
+                              className="h-20 w-20 rounded-lg border border-gray-200 object-contain p-2 dark:border-gray-700"
+                            />
+                          </div>
+                        )}
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={form[field.key] || ""}
+                      onChange={(e) => update(field.key, e.target.value)}
                     />
-                  </div>
-                )}
-            </>
-          ) : (
-            <input
-              type="text"
-              className="form-input"
-              value={form[field.key] || ""}
-              onChange={(e) => update(field.key, e.target.value)}
-            />
-          )}
+                  )}
+                </div>
+              ))}
+          </div>
         </div>
-      ))}
-  </div>
-</div>
 
         <div className="mt-8 flex items-center gap-5">
           <button

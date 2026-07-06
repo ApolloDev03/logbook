@@ -503,7 +503,7 @@ export default function CreateBuilding() {
     state_id: "",
     city_id: "",
     address: "",
-    address_line_2:"",
+    address_line_2: "",
     landmark: "",
     status: "1",
   });
@@ -512,6 +512,9 @@ export default function CreateBuilding() {
   const [customerLoading, setCustomerLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(false);
+
+  const [newCityName, setNewCityName] = useState("");
+  const [addCityLoading, setAddCityLoading] = useState(false);
 
   const states = statesByCountry[String(form.country_id)] || [];
   const cities = citiesByState[String(form.state_id)] || [];
@@ -530,26 +533,26 @@ export default function CreateBuilding() {
   useEffect(() => {
     getCustomerDropdownList();
   }, []);
-const authUser = JSON.parse(localStorage.getItem("auth_user") || "{}");
+  const authUser = JSON.parse(localStorage.getItem("auth_user") || "{}");
 
-const authRoleId = Number(authUser?.role_id);
-const customerRoleId = Number(authUser?.customer?.role_id);
-console.log(authRoleId,"uthdjh")
-const fields = [
-  ...(authRoleId == 3 || customerRoleId == 3
-    ? []
-    : [{ key: "customer_id", label: "Customer Company", type: "customer" }]),
+  const authRoleId = Number(authUser?.role_id);
+  const customerRoleId = Number(authUser?.customer?.role_id);
+  console.log(authRoleId, "uthdjh")
+  const fields = [
+    ...(authRoleId == 3 || customerRoleId == 3
+      ? []
+      : [{ key: "customer_id", label: "Customer Company", type: "customer" }]),
     { key: "uprn_no", label: "UPRN Number", type: "text" },
-  { key: "building_name", label: "Name of Building", type: "text" },
-  { key: "address", label: "Address Line 1", type: "text" },
-  { key: "address_line_2", label: "Address Line 2", type: "text" },
-  { key: "country_id", label: "Country", type: "country" },
-  { key: "state_id", label: "State", type: "state" },
-  { key: "city_id", label: "City", type: "city" },
-  { key: "postcode", label: "Postcode", type: "text" },
-  // { key: "landmark", label: "Access Information", type: "text", optional: true },
-  { key: "landmark", label: "Access Information", type: "text" },
-];
+    { key: "building_name", label: "Name of Building", type: "text" },
+    { key: "address", label: "Address Line 1", type: "text" },
+    { key: "address_line_2", label: "Address Line 2", type: "text" },
+    { key: "country_id", label: "Country", type: "country" },
+    { key: "state_id", label: "State", type: "state" },
+    { key: "city_id", label: "City", type: "city" },
+    { key: "postcode", label: "Postcode", type: "text" },
+    // { key: "landmark", label: "Access Information", type: "text", optional: true },
+    { key: "landmark", label: "Access Information", type: "text" },
+  ];
   useEffect(() => {
     const fetchBuildingById = async () => {
       if (!buildingId) return;
@@ -579,7 +582,7 @@ const fields = [
 
           setForm({
             customer_id: building.customer_id?.toString() || "",
-            uprn_no:building.uprn_no || "",
+            uprn_no: building.uprn_no || "",
             building_name: building.building_name || "",
             postcode: building.postcode?.toString() || "",
             country_id: building.country_id?.toString() || "",
@@ -671,11 +674,13 @@ const fields = [
       city_id: "",
     }));
 
+    setNewCityName("");
+
     if (countryId) {
       await getStateList(countryId);
     }
 
-     // Only for UK
+    // Only for UK
     if (isUKCountry) {
       await getCityList("37");
     }
@@ -688,8 +693,78 @@ const fields = [
       city_id: "",
     }));
 
+    setNewCityName("");
+
     if (stateId) {
       await getCityList(stateId);
+    }
+  };
+
+  const handleCityChange = (cityId) => {
+    update("city_id", cityId);
+
+    if (cityId !== "other") {
+      setNewCityName("");
+    }
+  };
+
+  const handleAddCity = async () => {
+    const cityName = newCityName.trim();
+
+    if (!cityName) {
+      toast.error("Please enter city name.");
+      return;
+    }
+
+    const stateIdForCity = isUK ? "37" : form.state_id;
+
+    if (!stateIdForCity) {
+      toast.error("Please select state first.");
+      return;
+    }
+
+    try {
+      setAddCityLoading(true);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/insertcity`,
+        {
+          stateid: Number(stateIdForCity),
+          cityname: cityName,
+        },
+        {
+          headers: getAuthHeaders(),
+        },
+      );
+
+      if (response?.data?.success) {
+        toast.success(response?.data?.message || "City added successfully");
+
+        const newCityId =
+          response?.data?.data?.cityId ||
+          response?.data?.data?.cityid ||
+          response?.data?.data?.iCityId;
+
+        await getCityList(stateIdForCity, true);
+
+        setForm((prev) => ({
+          ...prev,
+          city_id: newCityId ? String(newCityId) : "",
+        }));
+
+        setNewCityName("");
+      } else {
+        toast.error(response?.data?.message || "Failed to add city.");
+      }
+    } catch (error) {
+      const msg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to add city.";
+
+      toast.error(msg);
+    } finally {
+      setAddCityLoading(false);
     }
   };
 
@@ -703,10 +778,12 @@ const fields = [
       state_id: "",
       city_id: "",
       address: "",
-      address_line_2:"",
+      address_line_2: "",
       landmark: "",
       status: "1",
     });
+
+    setNewCityName("");
   };
   const isRequiredField = (field) => {
     if (field.optional) {
@@ -765,7 +842,7 @@ const fields = [
       return false;
     }
 
-    if (!form.city_id) {
+    if (!form.city_id || form.city_id === "other") {
       toast.error("Please select city.");
       return false;
     }
@@ -796,7 +873,7 @@ const fields = [
         customer_id:
           (authRoleId === 3 || customerRoleId === 3
             ? authUser.customer?.customer_id : form.customer_id),
-            uprn_no: Number(form.uprn_no),
+        uprn_no: Number(form.uprn_no),
         building_name: form.building_name,
         postcode: form.postcode,
         country_id: Number(form.country_id),
@@ -877,137 +954,162 @@ const fields = [
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {fields
-            .filter((field) => {
-              if (field.key === "state_id" && isUK) {
-                    return false;
-                  }
-                  return true;
-                })
-            .map((field) => (
-              <div key={field.key}>
-                <label className="form-label">
-                  {field.label}
+              .filter((field) => {
+                if (field.key === "state_id" && isUK) {
+                  return false;
+                }
+                return true;
+              })
+              .map((field) => (
+                <div key={field.key}>
+                  <label className="form-label">
+                    {field.label}
 
-                  {isRequiredField(field) && (
-                    <span className="ml-1 text-red-500">*</span>
-                  )}
+                    {isRequiredField(field) && (
+                      <span className="ml-1 text-red-500">*</span>
+                    )}
 
-                  {field.optional && (
-                    <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
-                      (Not mandatory)
-                    </span>
-                  )}
-                </label>
+                    {field.optional && (
+                      <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
+                        (Not mandatory)
+                      </span>
+                    )}
+                  </label>
 
-                {field.type === "customer" ? (
-                  <div className="relative">
-                    <select
-                      className="form-select"
-                      value={form.customer_id || ""}
-                      onChange={(e) => update("customer_id", e.target.value)}
-                      disabled={customerLoading}
-                    >
-                      <option value="">
-                        {customerLoading
-                          ? "Loading customers..."
-                          : "Select customer"}
-                      </option>
-
-                      {customers.map((customer) => (
-                        <option key={customer.id} value={customer.id}>
-                          {customer.name}
+                  {field.type === "customer" ? (
+                    <div className="relative">
+                      <select
+                        className="form-select"
+                        value={form.customer_id || ""}
+                        onChange={(e) => update("customer_id", e.target.value)}
+                        disabled={customerLoading}
+                      >
+                        <option value="">
+                          {customerLoading
+                            ? "Loading customers..."
+                            : "Select customer"}
                         </option>
-                      ))}
-                    </select>
 
-                    <SelectArrow />
-                  </div>
-                ) : field.type === "country" ? (
-                  <div className="relative">
-                    <select
-                      className="form-select"
-                      value={form.country_id || ""}
-                      onChange={(e) => handleCountryChange(e.target.value)}
-                      disabled={countryLoading}
-                    >
-                      <option value="">
-                        {countryLoading
-                          ? "Loading countries..."
-                          : "Select country"}
-                      </option>
+                        {customers.map((customer) => (
+                          <option key={customer.id} value={customer.id}>
+                            {customer.name}
+                          </option>
+                        ))}
+                      </select>
 
-                      {countries.map((country) => (
-                        <option
-                          key={country.countryid}
-                          value={country.countryid}
+                      <SelectArrow />
+                    </div>
+                  ) : field.type === "country" ? (
+                    <div className="relative">
+                      <select
+                        className="form-select"
+                        value={form.country_id || ""}
+                        onChange={(e) => handleCountryChange(e.target.value)}
+                        disabled={countryLoading}
+                      >
+                        <option value="">
+                          {countryLoading
+                            ? "Loading countries..."
+                            : "Select country"}
+                        </option>
+
+                        {countries.map((country) => (
+                          <option
+                            key={country.countryid}
+                            value={country.countryid}
+                          >
+                            {country.country_name}
+                          </option>
+                        ))}
+                      </select>
+
+                      <SelectArrow />
+                    </div>
+                  ) : field.type === "state" ? (
+                    <div className="relative">
+                      <select
+                        className="form-select"
+                        value={form.state_id || ""}
+                        onChange={(e) => handleStateChange(e.target.value)}
+                        disabled={!form.country_id || stateLoading}
+                      >
+                        <option value="">
+                          {stateLoading
+                            ? "Loading states..."
+                            : form.country_id
+                              ? "Select Option"
+                              : "Select country first"}
+                        </option>
+
+                        {states.map((state) => (
+                          <option key={state.iStateId} value={state.iStateId}>
+                            {state.strStateName}
+                          </option>
+                        ))}
+                      </select>
+
+                      <SelectArrow />
+                    </div>
+                  ) : field.type === "city" ? (
+                    <div>
+                      <div className="relative">
+                        <select
+                          className="form-select"
+                          value={form.city_id || ""}
+                          onChange={(e) => handleCityChange(e.target.value)}
+                          disabled={(!form.state_id && !isUK) || cityLoading}
                         >
-                          {country.country_name}
-                        </option>
-                      ))}
-                    </select>
+                          <option value="">
+                            {cityLoading
+                              ? "Loading cities..."
+                              : (form.state_id || isUK)
+                                ? "Select Option"
+                                : "Select state first"}
+                          </option>
 
-                    <SelectArrow />
-                  </div>
-                ) : field.type === "state" ? (
-                  <div className="relative">
-                    <select
-                      className="form-select"
-                      value={form.state_id || ""}
-                      onChange={(e) => handleStateChange(e.target.value)}
-                      disabled={!form.country_id || stateLoading}
-                    >
-                      <option value="">
-                        {stateLoading
-                          ? "Loading states..."
-                          : form.country_id
-                            ? "Select Option"
-                            : "Select country first"}
-                      </option>
+                          {cities.map((city) => (
+                            <option key={city.iCityId} value={city.iCityId}>
+                              {city.strCityName}
+                            </option>
+                          ))}
 
-                      {states.map((state) => (
-                        <option key={state.iStateId} value={state.iStateId}>
-                          {state.strStateName}
-                        </option>
-                      ))}
-                    </select>
+                          {(form.state_id || isUK) && <option value="other">Other</option>}
+                        </select>
 
-                    <SelectArrow />
-                  </div>
-                ) : field.type === "city" ? (
-                  <div className="relative">
-                    <select
-                      className="form-select"
-                      value={form.city_id || ""}
-                      onChange={(e) => update("city_id", e.target.value)}
-                      disabled={(!form.state_id && !isUK) || cityLoading}
-                    >
-                      <option value="">
-                        {cityLoading
-                          ? "Loading cities..."
-                          : form.state_id
-                            ? "Select Option"
-                            : "Select state first"}
-                      </option>
+                        <SelectArrow />
+                      </div>
 
-                      {cities.map((city) => (
-                        <option key={city.iCityId} value={city.iCityId}>
-                          {city.strCityName}
-                        </option>
-                      ))}
-                    </select>
+                      {form.city_id === "other" && (
+                        <div className="mt-3 flex gap-3">
+                          <input
+                            type="text"
+                            className="form-input"
+                            placeholder="Enter new city"
+                            value={newCityName}
+                            onChange={(e) => setNewCityName(e.target.value)}
+                          />
 
-                    <SelectArrow />
-                  </div>
-                ) : (
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={form[field.key] || ""}
-                    onChange={(e) => update(field.key, e.target.value)}
-                  />
-                )}
-              </div>
-            ))}
+                          <button
+                            type="button"
+                            onClick={handleAddCity}
+                            disabled={addCityLoading}
+                            className="btn-primary whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-70"
+                          >
+                            {addCityLoading ? "Adding..." : "Add City"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={form[field.key] || ""}
+                      onChange={(e) => update(field.key, e.target.value)}
+                    />
+                  )}
+                </div>
+              ))}
           </div>
 
           <div className="mt-8 flex items-center gap-5">

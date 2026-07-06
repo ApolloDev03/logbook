@@ -423,7 +423,7 @@ export default function Header() {
               </button>
 
               {notifOpen && (
-                <div className="shadow-theme-lg fixed left-3 right-3 top-[118px] z-[99999] flex max-h-[calc(100vh-140px)] flex-col rounded-2xl border border-gray-200 bg-white p-3 sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-[17px] sm:h-[480px] sm:w-[361px] dark:border-gray-800 dark:bg-gray-900">
+                <div className="shadow-theme-lg fixed left-3 right-3 top-[118px] z-[99999] flex max-h-[calc(100vh-140px)] flex-col rounded-2xl border border-gray-200 bg-white shadow-[0px_4px_20px_0px_#00000030] p-3 sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-[17px] sm:h-[480px] sm:w-[361px] dark:border-gray-800 dark:bg-gray-900">
                   <div className="mb-3 flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
                     <h5 className="text-lg font-semibold text-gray-800 dark:text-white/90">
                       Notification
