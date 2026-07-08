@@ -237,6 +237,7 @@ export default function Dashboard() {
   );
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedEndDate, setSelectedEndDate] = useState(null); // end date
 
   const getNearestSunday = (date) => {
     if (!date) return "";
@@ -294,7 +295,7 @@ export default function Dashboard() {
 
       if (selectedDate) {
         payload.start_date = format(selectedDate, "yyyy-MM-dd");
-        payload.end_date = getNearestSunday(selectedDate);
+        payload.end_date = format(selectedEndDate || selectedDate, "yyyy-MM-dd");
       }
 
 
@@ -309,12 +310,12 @@ export default function Dashboard() {
         const recentLogs = (data?.recent_logs || []).map((item) => ({
           // id: `FS-${String(item.log_id).padStart(4, "0")}`,          
           id: item.company_unique_log_id,
-          log_id: item.log_id,          
+          log_id: item.log_id,
           type: `${item.details[0].System} - ${item.details[0].Purpose_of_Visit}`,
           engineer: item.engineer || "-",
           company: item.customer_company || "-",
           building: item.building || "-",
-          postcode:  item.postcode || "-",
+          postcode: item.postcode || "-",
         }));
 
         setLogs(recentLogs);
@@ -360,7 +361,7 @@ export default function Dashboard() {
   };
   useEffect(() => {
     fetchDashboard();
-  }, [selectedYear, selectedMonth, selectedDate]);
+  }, [selectedYear, selectedMonth, selectedDate, selectedEndDate]);
 
   const summary = dashboardData?.summary || {};
 
@@ -391,11 +392,11 @@ export default function Dashboard() {
         value: summary.today_logs || 0,
         icon: <LogIcon />,
       },
-      {
-        label: "System",
-        value: summary.total_components || 0,
-        icon: <ComponentIcon />,
-      },
+      // {
+      //   label: "System",
+      //   value: summary.total_components || 0,
+      //   icon: <ComponentIcon />,
+      // },
     ],
     [summary],
   );
@@ -624,6 +625,8 @@ export default function Dashboard() {
         setSelectedMonth={setSelectedMonth}
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
+        selectedEndDate={selectedEndDate}
+        setSelectedEndDate={setSelectedEndDate}
       />
 
       <div className="w-full overflow-hidden">
@@ -728,7 +731,7 @@ export default function Dashboard() {
             <div className="card overflow-hidden rounded-xl">
               <div className="m-4 flex flex-col gap-4 sm:m-5 md:m-6 md:flex-row md:items-center">
                 <h3 className="text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
-                 Log of the Day
+                  Log of the Day
                 </h3>
               </div>
 
@@ -736,27 +739,27 @@ export default function Dashboard() {
                 <table className="min-w-[700px] w-full border border-gray-200 text-left text-sm dark:border-gray-800">
                   <thead>
                     <tr className="border-b border-gray-100 dark:border-gray-800"
-                       onClick={() => handleSort("log_id")}                
+                      onClick={() => handleSort("log_id")}
                     >
-                                        
-                <th className="table-th whitespace-nowrap">
-                  <button
-                    type="button"
-                    className="flex items-center gap-1 font-semibold"
-                  >
-                    Log ID
-                  </button>
-                </th>
-                 {/* { (authUser.role_id === 1 || authUser.customer?.customer_id === null) && ( */}
-                  <th className="table-th whitespace-nowrap">Company Name </th>
-                {/* )}  */}
-                <th className="table-th whitespace-nowrap">
-                  System & Purpose
-                </th>
-                <th className="table-th whitespace-nowrap">Building</th>
-                <th className="table-th whitespace-nowrap">Postcode</th>
-                <th className="table-th whitespace-nowrap">Engineer</th>
-                                
+
+                      <th className="table-th whitespace-nowrap">
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 font-semibold"
+                        >
+                          Log ID
+                        </button>
+                      </th>
+                      {/* { (authUser.role_id === 1 || authUser.customer?.customer_id === null) && ( */}
+                      <th className="table-th whitespace-nowrap">Company Name </th>
+                      {/* )}  */}
+                      <th className="table-th whitespace-nowrap">
+                        System & Purpose
+                      </th>
+                      <th className="table-th whitespace-nowrap">Building</th>
+                      <th className="table-th whitespace-nowrap">Postcode</th>
+                      <th className="table-th whitespace-nowrap">Engineer</th>
+
                     </tr>
                   </thead>
 
@@ -768,20 +771,20 @@ export default function Dashboard() {
 
                             {row.id}
                           </td>
-  <td className="table-td whitespace-nowrap">
+                          <td className="table-td whitespace-nowrap">
                             {row.company}
                           </td>
                           <td className="table-td whitespace-nowrap">
                             {row.type}
-                          </td>                     
-                        
+                          </td>
+
                           <td className="table-td whitespace-nowrap">
                             {row.building}
                           </td>
-<td className="table-td whitespace-nowrap">
+                          <td className="table-td whitespace-nowrap">
                             {row.postcode}
                           </td>
-                           <td className="table-td whitespace-nowrap">
+                          <td className="table-td whitespace-nowrap">
                             {row.engineer}
                           </td>
                         </tr>
@@ -887,11 +890,11 @@ export default function Dashboard() {
                   label="Building Name"
                   value={selectedLog?.building_name}
                 />
-                <Info label="UPRN" value={selectedLog?.uprn_no} />    
+                <Info label="UPRN" value={selectedLog?.uprn_no} />
                 <Info label="Address Line 1" value={selectedLog?.address} />
                 <Info label="Address Line 2" value={selectedLog?.address_line_2} />
                 <Info label="Country" value={selectedLog?.country_name} />
-                 {!["uk", "united kingdom","United Kingdom"].includes(
+                {!["uk", "united kingdom", "United Kingdom"].includes(
                   selectedLog?.country_name?.toLowerCase()
                 ) && (
                     <Info
@@ -900,7 +903,7 @@ export default function Dashboard() {
                     />
                   )}
                 <Info label="City" value={selectedLog?.city_name} />
-                 <Info label="Postcode" value={selectedLog?.postcode} />
+                <Info label="Postcode" value={selectedLog?.postcode} />
                 <Info label="Access Information" value={selectedLog?.landmark} />
 
 
