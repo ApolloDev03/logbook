@@ -548,7 +548,7 @@ export default function SignIn() {
                     </label>
 
                     <a
-                      href="/reset-password.html"
+                      href="/forgot-password"
                       className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
                     >
                       Forgot password?
@@ -559,7 +559,7 @@ export default function SignIn() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="flex w-full items-center justify-center rounded-lg btn-primary px-4 py-3 text-sm font-medium text-white shadow-sm transition  disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {loading ? "Signing In..." : "Sign In"}
                   </button>

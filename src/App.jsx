@@ -37,6 +37,8 @@ import BuildingImport from "./pages/BuildingImport";
 
 import "react-datepicker/dist/react-datepicker.css";
 import "./styles/datepicker.css";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function getStoredUser() {
   try {
@@ -119,6 +121,25 @@ function AppRoutes() {
             </AuthRoute>
           }
         />
+
+        <Route
+          path="/forgot-password"
+          element={
+            <AuthRoute>
+              <ForgotPassword />
+            </AuthRoute>
+          }
+        />
+
+        <Route
+          path="/reset-password"
+          element={
+            <AuthRoute>
+              <ResetPassword />
+            </AuthRoute>
+          }
+        />
+
         <Route path="/404" element={<NotFound />} />
         <Route path="/engineer-scan" element={<EngineerScan />} />
        

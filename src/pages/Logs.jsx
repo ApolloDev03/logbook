@@ -3,12 +3,15 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Breadcrumb from "../components/ui/Breadcrumb";
 import PopupModal from "../components/ui/PopupModal";
-import { DateRange } from "react-date-range";
+// import { DateRange } from "react-date-range";
 import { format } from "date-fns";
 import { apiUrl } from "../config";
 
-import "react-date-range/dist/styles.css";
-import "react-date-range/dist/theme/default.css";
+// import "react-date-range/dist/styles.css";
+// import "react-date-range/dist/theme/default.css";
+
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const EyeIcon = () => (
   <svg
@@ -186,16 +189,16 @@ export default function Logs() {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const datePickerRef = useRef(null);
+  // const [showDatePicker, setShowDatePicker] = useState(false);
+  // const datePickerRef = useRef(null);
 
-  const [range, setRange] = useState([
-    {
-      startDate: new Date(),
-      endDate: new Date(),
-      key: "selection",
-    },
-  ]);
+  // const [range, setRange] = useState([
+  //   {
+  //     startDate: new Date(),
+  //     endDate: new Date(),
+  //     key: "selection",
+  //   },
+  // ]);
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -230,22 +233,22 @@ export default function Logs() {
 
 
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        datePickerRef.current &&
-        !datePickerRef.current.contains(event.target)
-      ) {
-        setShowDatePicker(false);
-      }
-    };
+  // useEffect(() => {
+  //   const handleClickOutside = (event) => {
+  //     if (
+  //       datePickerRef.current &&
+  //       !datePickerRef.current.contains(event.target)
+  //     ) {
+  //       setShowDatePicker(false);
+  //     }
+  //   };
 
-    document.addEventListener("mousedown", handleClickOutside);
+  //   document.addEventListener("mousedown", handleClickOutside);
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  //   return () => {
+  //     document.removeEventListener("mousedown", handleClickOutside);
+  //   };
+  // }, []);
 
   useEffect(() => {
     if (viewModalOpen) {
@@ -335,7 +338,7 @@ export default function Logs() {
     getBuildingList("");
   }, []);
 
-  const getLogList = async (pageNumber = 1, customLimit = limit) => {
+  const getLogList = async (pageNumber = 1, customLimit = limit, customFilters = filters) => {
     try {
       if (!getToken()) {
         toast.error("Token not found. Please login again.");
@@ -347,19 +350,19 @@ export default function Logs() {
       const payload = {
         page: pageNumber,
         limit: customLimit,
-        search: filters.search || "",
+        search: customFilters.search || "",
 
-        building_id: filters.buildingId || "",
+        building_id: customFilters.buildingId || "",
         created_by_id:
           authUser?.role_id === 1 || authUser?.role_id === 3
             ? null
             : authUser?.id,
         customer_id:
           authUser?.role_id == 3
-            ? filters.customerId || authUser?.customer.customer_id
-            : filters.customerId,
-        start_date: filters.fromDate || "",
-        end_date: filters.toDate || "",
+            ? customFilters.customerId || authUser?.customer.customer_id
+            : customFilters.customerId,
+        start_date: customFilters.fromDate || "",
+        end_date: customFilters.toDate || "",
       };
 
       const response = await axios.post(`${apiUrl}/auth/log_list`, payload, {
@@ -572,13 +575,13 @@ export default function Logs() {
       toDate: "",
     }));
 
-    setRange([
-      {
-        startDate: new Date(),
-        endDate: new Date(),
-        key: "selection",
-      },
-    ]);
+    // setRange([
+    //   {
+    //     startDate: new Date(),
+    //     endDate: new Date(),
+    //     key: "selection",
+    //   },
+    // ]);
 
     setPage(1);
   };
@@ -662,32 +665,51 @@ export default function Logs() {
     );
   };
   const resetFilters = () => {
-    setFilters({
+    // setFilters({
+    //   search: "",
+    //   customerId: "",
+    //   buildingId: "",
+    //   fromDate: "",
+    //   toDate: "",
+    // });
+
+    const emptyFilters = {
       search: "",
       customerId: "",
       buildingId: "",
       fromDate: "",
       toDate: "",
-    });
+    };
 
-    setRange([
-      {
-        startDate: new Date(),
-        endDate: new Date(),
-        key: "selection",
-      },
-    ]);
-
+    setFilters(emptyFilters);
     setPage(1);
 
-    // Admin => Load All Buildings
     if (authUser?.role_id === 1) {
       getBuildingList("");
     } else {
       getBuildingList(authUser?.customer?.customer_id || "");
     }
 
-    // Reload logs
+    getLogList(1, limit, emptyFilters);
+
+    // setRange([
+    //   {
+    //     startDate: new Date(),
+    //     endDate: new Date(),
+    //     key: "selection",
+    //   },
+    // ]);
+
+    setPage(1);
+
+
+    if (authUser?.role_id === 1) {
+      getBuildingList("");
+    } else {
+      getBuildingList(authUser?.customer?.customer_id || "");
+    }
+
+
     getLogList(1);
   };
 
@@ -739,7 +761,7 @@ export default function Logs() {
     <>
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Logs Reports
+          Log Reports
         </h1>
 
         <Breadcrumb pageName="Logs Reports" parentPage="Reports Management" />
@@ -750,7 +772,7 @@ export default function Logs() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
             <input
               type="text"
-              placeholder="Search List In Poatcode,Address..."
+              placeholder="Search List In Postcode,Address..."
               className="form-input"
               value={filters.search}
               onChange={(e) =>
@@ -813,63 +835,26 @@ export default function Logs() {
               <SelectArrow />
             </div>
 
-            <div className="relative" ref={datePickerRef}>
-              <button
-                type="button"
-                onClick={() => setShowDatePicker((prev) => !prev)}
-                className="form-input flex w-full items-center justify-between text-left"
-              >
-                <span className="truncate">
-                  {filters.fromDate && filters.toDate
-                    ? `${format(new Date(filters.fromDate), "MMM dd, yyyy")} - ${format(
-                      new Date(filters.toDate),
-                      "MMM dd, yyyy",
-                    )}`
-                    : "Select Date Range"}
-                </span>
+            <UniqueDateRangePicker
+              value={{
+                fromDate: filters.fromDate,
+                toDate: filters.toDate,
+              }}
+              onChange={({ fromDate, toDate }) => {
+                setFilters((prev) => ({
+                  ...prev,
+                  fromDate,
+                  toDate,
+                }));
 
-                <CalendarIcon />
-              </button>
-
-              {showDatePicker && (
-                <div className="absolute left-1/2 top-full z-[9999] mt-3 w-[calc(100vw-32px)] max-w-[380px] -translate-x-1/2 rounded-xl bg-white p-3 shadow-2xl dark:bg-gray-900 sm:left-0 sm:w-[380px] sm:translate-x-0 md:left-auto md:right-0 md:translate-x-0">
-                  <div className="date-range-responsive">
-                    <DateRange
-                      editableDateInputs={true}
-                      onChange={(item) => {
-                        const start = item.selection.startDate;
-                        const end = item.selection.endDate;
-
-                        setRange([item.selection]);
-
-                        setFilters((prev) => ({
-                          ...prev,
-                          fromDate: format(start, "yyyy-MM-dd"),
-                          toDate: format(end, "yyyy-MM-dd"),
-                        }));
-
-                        setPage(1);
-                      }}
-                      moveRangeOnFirstSelection={false}
-                      ranges={range}
-                      months={1}
-                      direction="horizontal"
-                      rangeColors={["#3b82f6"]}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
+                setPage(1);
+              }}
+              onClear={clearDateRange}
+            />
 
           </div>
           <div className="flex justify-end gap-4 pt-4">
-            <button
-              type="button"
-              onClick={exportLogs}
-              className="rounded-lg btn-primary px-4 py-2  "
-            >
-              Export
-            </button>
+
             <button
               type="button"
               onClick={() => getLogList(1)}
@@ -883,6 +868,13 @@ export default function Logs() {
               className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
             >
               Clear
+            </button>
+            <button
+              type="button"
+              onClick={exportLogs}
+              className="rounded-lg bg-green-600 hover:bg-green-700 text-white px-4 py-2  "
+            >
+              Export
             </button>
           </div>
         </div>
@@ -1251,6 +1243,231 @@ export default function Logs() {
           </div>
         )}
       </PopupModal>
+    </>
+  );
+}
+
+function UniqueDateRangePicker({
+  value,
+  onChange,
+  onClear,
+}) {
+  const [open, setOpen] = useState(false);
+  const pickerRef = useRef(null);
+
+  const parseLocalDate = (dateValue) => {
+    if (!dateValue) return null;
+
+    const [yyyy, mm, dd] = dateValue.split("-").map(Number);
+    return new Date(yyyy, mm - 1, dd);
+  };
+
+  const startDate = parseLocalDate(value.fromDate);
+  const endDate = parseLocalDate(value.toDate);
+
+  const displayDate =
+    value.fromDate && value.toDate
+      ? `${format(startDate, "MMM dd, yyyy")} - ${format(endDate, "MMM dd, yyyy")}`
+      : "Select Date Range";
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (pickerRef.current && !pickerRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleDateChange = (dates) => {
+    const [start, end] = dates;
+
+    onChange({
+      fromDate: start ? format(start, "yyyy-MM-dd") : "",
+      toDate: end ? format(end, "yyyy-MM-dd") : "",
+    });
+
+    if (start && end) {
+      setOpen(false);
+    }
+  };
+
+  return (
+    <>
+      <style>
+        {`
+          .react-datepicker {
+            border: none;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+            font-family: inherit;
+          }
+
+          .react-datepicker__header {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 15px 18px;
+          }
+
+          .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+
+          .calendar-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+          }
+
+          .calendar-arrow {
+            width: 34px;
+            height: 34px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 22px;
+          }
+
+          .calendar-arrow:hover {
+            background: #f3f4f6;
+          }
+
+          .react-datepicker__navigation {
+            display: none;
+          }
+
+          .react-datepicker__current-month {
+            display: none;
+          }
+
+          .react-datepicker__day-name {
+            width: 2.6rem;
+            line-height: 2.6rem;
+            font-weight: 600;
+            color: #6b7280;
+          }
+
+          .react-datepicker__day {
+            width: 2.6rem;
+            line-height: 2.6rem;
+            margin: 2px;
+            border-radius: 8px;
+          }
+
+          .react-datepicker__day:hover {
+            background: #f3f4f6;
+          }
+
+          .react-datepicker__day--selected,
+          .react-datepicker__day--in-selecting-range,
+          .react-datepicker__day--in-range,
+          .react-datepicker__day--range-start,
+          .react-datepicker__day--range-end,
+          .react-datepicker__day--keyboard-selected {
+            background: #2563eb !important;
+            color: #fff !important;
+          }
+
+          .react-datepicker__day--outside-month {
+            color: #cbd5e1;
+          }
+        `}
+      </style>
+
+      <div className="relative" ref={pickerRef}>
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          className="form-input flex w-full items-center justify-between text-left"
+        >
+          <span
+            className={
+              value.fromDate && value.toDate
+                ? "truncate text-gray-900 dark:text-white"
+                : "truncate text-gray-400"
+            }
+          >
+            {displayDate}
+          </span>
+
+          <CalendarIcon />
+        </button>
+
+        {open && (
+          <div className="absolute left-1/2 top-full z-[9999] mt-3 w-[calc(100vw-32px)] max-w-[380px] -translate-x-1/2 rounded-2xl bg-white p-3 shadow-2xl dark:bg-gray-900 sm:left-0 sm:w-[380px] sm:translate-x-0 md:left-auto md:right-0 md:translate-x-0">
+            <DatePicker
+              selected={startDate}
+              onChange={handleDateChange}
+              startDate={startDate}
+              endDate={endDate}
+              selectsRange
+              inline
+              maxDate={new Date()}
+              renderCustomHeader={({
+                date,
+                decreaseMonth,
+                increaseMonth,
+                prevMonthButtonDisabled,
+                nextMonthButtonDisabled,
+              }) => (
+                <div className="calendar-header">
+                  <button
+                    type="button"
+                    onClick={decreaseMonth}
+                    disabled={prevMonthButtonDisabled}
+                    className="calendar-arrow"
+                  >
+                    &#10094;
+                  </button>
+
+                  <span className="calendar-title">
+                    {format(date, "MMMM yyyy")}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={increaseMonth}
+                    disabled={nextMonthButtonDisabled}
+                    className="calendar-arrow"
+                  >
+                    &#10095;
+                  </button>
+                </div>
+              )}
+            />
+
+            <div className="mt-3 flex gap-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+              <button
+                type="button"
+                onClick={() => {
+                  onClear();
+                  setOpen(false);
+                }}
+                className="w-full rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+              >
+                Clear
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="w-full rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 }

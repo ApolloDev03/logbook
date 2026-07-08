@@ -1,4 +1,7 @@
 import { useState, useRef, useEffect } from "react";
+import DatePicker from "react-datepicker";
+import { format } from "date-fns";
+import "react-datepicker/dist/react-datepicker.css";
 
 
 const months = [
@@ -23,11 +26,29 @@ export default function DashboardFilters({
   setSelectedMonth,
   selectedDate,
   setSelectedDate,
+  selectedEndDate,
+  setSelectedEndDate,
 }) {
   const [monthOpen, setMonthOpen] = useState(false);
   const monthRef = useRef(null);
   const dateRef = useRef(null);
   const [dateOpen, setDateOpen] = useState(false);
+
+  const CalendarIcon = () => (
+    <svg
+      className="h-5 w-5 text-gray-500 dark:text-gray-400"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M8 7V3m8 4V3M5 11h14M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"
+      />
+    </svg>
+  );
 
 
   useEffect(() => {
@@ -49,30 +70,26 @@ export default function DashboardFilters({
 
 
 
-  const daysInMonth =
-    selectedMonth !== null
-      ? new Date(selectedYear, selectedMonth + 1, 0).getDate()
-      : 31;
-
-  const firstDay =
-    selectedMonth !== null
-      ? new Date(selectedYear, selectedMonth, 1).getDay()
-      : 0;
-
+  const monthStartDate = new Date(selectedYear, selectedMonth, 1);
+  const monthEndDate = new Date(selectedYear, selectedMonth + 1, 0);
 
   useEffect(() => {
-    const maxDays = new Date(
-      selectedYear,
-      selectedMonth + 1,
-      0
-    ).getDate();
+    const maxDays = new Date(selectedYear, selectedMonth + 1, 0).getDate();
 
-    if (!selectedDate) return;
+    setSelectedDate((prev) => {
+      if (!prev) return prev;
 
-    const day = Math.min(selectedDate.getDate(), maxDays);
+      const day = Math.min(prev.getDate(), maxDays);
+      return new Date(selectedYear, selectedMonth, day);
+    });
 
-    setSelectedDate(new Date(selectedYear, selectedMonth, day));
-  }, [selectedYear, selectedMonth]);
+    setSelectedEndDate((prev) => {
+      if (!prev) return prev;
+
+      const day = Math.min(prev.getDate(), maxDays);
+      return new Date(selectedYear, selectedMonth, day);
+    });
+  }, [selectedYear, selectedMonth, setSelectedDate, setSelectedEndDate]);
 
   return (
     <div className="card rounded-xl p-6 mb-6">
@@ -177,8 +194,169 @@ export default function DashboardFilters({
           )}
         </div>
 
-        {/* Date */}
+        {/* Date Range */}
         <div className="relative" ref={dateRef}>
+          <style>
+            {`
+      .dashboard-range-picker .react-datepicker {
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+        font-family: inherit;
+      }
+
+      .dashboard-range-picker .react-datepicker__month-container {
+        float: none;
+      }
+
+      .dashboard-range-picker .react-datepicker__header {
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 12px 10px 8px;
+      }
+
+      .dashboard-range-picker .react-datepicker__current-month,
+      .dashboard-range-picker .react-datepicker__navigation {
+        display: none !important;
+      }
+
+      .dashboard-range-picker .react-datepicker__day-name {
+        width: 2.6rem;
+        line-height: 2.6rem;
+        font-weight: 600;
+        color: #6b7280;
+      }
+
+      .dashboard-range-picker .react-datepicker__day {
+        width: 2.6rem;
+        line-height: 2.6rem;
+        margin: 2px;
+        border-radius: 8px;
+      }
+
+      .dashboard-range-picker .react-datepicker__day:hover {
+        background: #f3f4f6;
+      }
+
+      .dashboard-range-picker .react-datepicker__day--selected,
+      .dashboard-range-picker .react-datepicker__day--in-selecting-range,
+      .dashboard-range-picker .react-datepicker__day--in-range,
+      .dashboard-range-picker .react-datepicker__day--range-start,
+      .dashboard-range-picker .react-datepicker__day--range-end,
+      .dashboard-range-picker .react-datepicker__day--keyboard-selected {
+        background: #2563ea !important;
+        color: #fff !important;
+      }
+
+      .dashboard-range-picker .react-datepicker__day--disabled {
+        color: #d1d5db !important;
+        background: transparent !important;
+        cursor: not-allowed;
+      }
+
+      .dark .dashboard-range-picker .react-datepicker {
+        background: #111827;
+      }
+
+      .dark .dashboard-range-picker .react-datepicker__header {
+        background: #111827;
+        border-color: #374151;
+      }
+
+      .dark .dashboard-range-picker .react-datepicker__day {
+        color: #e5e7eb;
+      }
+
+      .dark .dashboard-range-picker .react-datepicker__day-name {
+        color: #9ca3af;
+      }
+
+      .dark .dashboard-range-picker .react-datepicker__day--disabled {
+        color: #4b5563 !important;
+      }
+    `}
+          </style>
+
+          <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-white">
+            Date
+          </label>
+
+          <button
+            type="button"
+            onClick={() => setDateOpen(!dateOpen)}
+            className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-left dark:bg-gray-900 dark:border-gray-700 dark:text-white"
+          >
+            <span
+              className={
+                selectedDate
+                  ? "truncate text-gray-900 dark:text-white"
+                  : "truncate text-gray-400"
+              }
+            >
+              {selectedDate
+                ? `${format(selectedDate, "MMM dd, yyyy")} - ${format(
+                  selectedEndDate || selectedDate,
+                  "MMM dd, yyyy"
+                )}`
+                : "Select Date Range"}
+            </span>
+
+            <CalendarIcon />
+          </button>
+
+          {dateOpen && (
+            <div className="dashboard-range-picker absolute right-0 z-50 mt-2 rounded-2xl bg-white p-3 shadow-2xl dark:bg-gray-900">
+              <DatePicker
+                key={`${selectedYear}-${selectedMonth}`}
+                selected={selectedDate}
+                onChange={(dates) => {
+                  const [start, end] = dates;
+
+                  setSelectedDate(start);
+                  setSelectedEndDate(end);
+
+                  if (start && end) {
+                    setDateOpen(false);
+                  }
+                }}
+                startDate={selectedDate}
+                endDate={selectedEndDate}
+                selectsRange
+                inline
+                openToDate={selectedDate || monthStartDate}
+                minDate={monthStartDate}
+                maxDate={monthEndDate}
+                renderCustomHeader={() => null}
+              />
+
+              <div className="mt-3 flex gap-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedDate(null);
+                    setSelectedEndDate(null);
+                    setDateOpen(false);
+                  }}
+                  className="w-full rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                >
+                  Clear
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDateOpen(false)}
+                  className="w-full rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Date */}
+        {/* <div className="relative" ref={dateRef}>
           <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-white">
             Date
           </label>
@@ -219,7 +397,7 @@ export default function DashboardFilters({
                   </div>
                 ))}
 
-                {/* Empty spaces before first day */}
+                
                 {Array.from({ length: firstDay }).map((_, index) => (
                   <div key={`empty-${index}`} className="h-10 w-10" />
                 ))}
@@ -246,7 +424,7 @@ export default function DashboardFilters({
               </div>
             </div>
           )}
-        </div>
+        </div> */}
 
       </div>
     </div>

@@ -616,7 +616,7 @@ export default function Building() {
     <>
       <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
-          Building
+          Buildings
         </h1>
 
         <div className="w-full sm:w-auto">
@@ -643,7 +643,7 @@ export default function Building() {
             <button
               type="button"
               onClick={() => navigate("/create-building")}
-              className="btn-gray w-full justify-center sm:w-auto"
+              className="btn-primary w-full justify-center sm:w-auto"
             >
               Add Building
             </button>
