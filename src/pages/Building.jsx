@@ -1099,12 +1099,12 @@ export default function Building() {
             </p>
 
             <p className="mt-3 break-words text-sm leading-6 text-gray-600 dark:text-gray-400">
-             Address line 1: {qrData?.buildingInfo?.address || "-"}
+             Address : {qrData?.buildingInfo?.address || "-"} {qrData?.buildingInfo?.address_line_2 || "-"}
             </p>
 
-            <p className="mt-3 break-words text-sm leading-6 text-gray-600 dark:text-gray-400">
+            {/* <p className="mt-3 break-words text-sm leading-6 text-gray-600 dark:text-gray-400">
              Address line 2: {qrData?.buildingInfo?.address_line_2 || "-"}
-            </p>
+            </p> */}
 
             <div className="mt-3 flex items-center justify-center gap-2 border-t border-gray-100 pt-4 dark:border-gray-800">
               <span className="text-md font-medium text-gray-500 dark:text-gray-400">
