@@ -199,9 +199,9 @@ export default function CreateComponent() {
                   onChange={(e) => update("componentName", e.target.value)}
                 />
 
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                {/* <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                   Basically from the single input user can add multiple items.
-                </p>
+                </p> */}
               </div>
             </div>
 

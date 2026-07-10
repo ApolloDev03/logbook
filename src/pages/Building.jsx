@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import logo from "../assets/images/logo/logo.svg";
+import logo from "../assets/images/logo/logo-new-dark.png";
 
 import Breadcrumb from "../components/ui/Breadcrumb";
 import PopupModal from "../components/ui/PopupModal";
@@ -468,6 +468,9 @@ export default function Building() {
         // Building details clicked row mathi pass kari che
         const qrcode = response?.data?.data || {};
 
+        // console.log(qrcode,"qrdataaaa");
+        
+
         setQrData({
           qrCode: qrcode?.qrCode || "",
           buildingInfo: {
@@ -475,6 +478,7 @@ export default function Building() {
             building_name: building?.building_name || "-",
             postcode: building?.postcode || "-",
             address: building?.address || "-",
+            address_line_2: building?.address_line_2 || "-"
           },
         });
 
@@ -643,7 +647,7 @@ export default function Building() {
             <button
               type="button"
               onClick={() => navigate("/create-building")}
-              className="btn-primary w-full justify-center sm:w-auto"
+              className="btn-gray w-full justify-center sm:w-auto"
             >
               Add Building
             </button>
@@ -1095,7 +1099,11 @@ export default function Building() {
             </p>
 
             <p className="mt-3 break-words text-sm leading-6 text-gray-600 dark:text-gray-400">
-              {qrData?.buildingInfo?.address || "-"}
+             Address line 1: {qrData?.buildingInfo?.address || "-"}
+            </p>
+
+            <p className="mt-3 break-words text-sm leading-6 text-gray-600 dark:text-gray-400">
+             Address line 2: {qrData?.buildingInfo?.address_line_2 || "-"}
             </p>
 
             <div className="mt-3 flex items-center justify-center gap-2 border-t border-gray-100 pt-4 dark:border-gray-800">
@@ -1106,7 +1114,7 @@ export default function Building() {
               <img
                 src={logo}
                 alt="FireSystem"
-                className="h-8 w-auto object-contain"
+                className="h-14 w-auto object-contain"
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
                 }}

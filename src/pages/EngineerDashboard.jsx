@@ -197,6 +197,7 @@ export default function EngineerDashboard() {
   );
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedEndDate, setSelectedEndDate] = useState(null); // end date
 
   const getNearestSunday = (date) => {
     if (!date) return "";
@@ -256,7 +257,7 @@ export default function EngineerDashboard() {
 
       if (selectedDate) {
         payload.start_date = format(selectedDate, "yyyy-MM-dd");
-        payload.end_date = getNearestSunday(selectedDate);
+        payload.end_date = format(selectedEndDate || selectedDate, "yyyy-MM-dd");
       }
 
       console.log("Engineer Dashboard Payload:", payload);
@@ -277,7 +278,12 @@ export default function EngineerDashboard() {
           // id: `FS-${String(item.log_id).padStart(4, "0")}`,
           id: item.company_unique_log_id,
           log_id: item.log_id,
-          type: item.details?.[0]?.Purpose_of_Visit || "-",
+          details: Array.isArray(item.details)
+            ? item.details.map((detail) => ({
+              system: detail?.System || "-",
+              purpose: detail?.Purpose_of_Visit || "-",
+            }))
+            : [],
           engineer: item.engineer || "-",
           customer: item.customer_company || "-",
           building: item.building || "-",
@@ -301,7 +307,7 @@ export default function EngineerDashboard() {
 
   useEffect(() => {
     fetchDashboard();
-  }, [selectedYear, selectedMonth, selectedDate]);
+  }, [selectedYear, selectedMonth, selectedDate, selectedEndDate]);
 
   const getLogById = async (logId) => {
     try {
@@ -363,12 +369,12 @@ export default function EngineerDashboard() {
       icon: <LogIcon />,
       permissionName: "Log Management",
     },
-    {
-      label: "System",
-      value: summary.total_components || 0,
-      icon: <ComponentIcon />,
-      permissionName: "System Management",
-    },
+    // {
+    //   label: "System",
+    //   value: summary.total_components || 0,
+    //   icon: <ComponentIcon />,
+    //   permissionName: "System Management",
+    // },
   ];
 
   const monthlyLogsData = MONTHS.map((month) => {
@@ -687,6 +693,8 @@ export default function EngineerDashboard() {
         setSelectedMonth={setSelectedMonth}
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
+        selectedEndDate={selectedEndDate}
+        setSelectedEndDate={setSelectedEndDate}
       />
 
       <div className="w-full overflow-hidden">
@@ -748,7 +756,7 @@ export default function EngineerDashboard() {
             <div className="card overflow-hidden rounded-xl">
               <div className="m-4 sm:m-6">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                  Today Log
+                 Log of the Day
                 </h3>
               </div>
 
@@ -786,7 +794,19 @@ export default function EngineerDashboard() {
                             {row.id}
                           </td>
                           <td className="table-td whitespace-nowrap">
-                            {row.type}
+                            {row.details?.length > 0 ? (
+                              <div className="space-y-1">
+                                {row.details.map((detail, index) => (
+                                  <div key={index}>
+                                    <span>{detail.system}</span>
+                                    <span> - </span>
+                                    <span>{detail.purpose}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              "-"
+                            )}
                           </td>
                           <td className="table-td whitespace-nowrap">
                             {row.engineer}
