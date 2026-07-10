@@ -52,7 +52,7 @@ export default function CreateMaintenance() {
   const [typeList, setTypeList] = useState([]);
 
   const [form, setForm] = useState({
-   // type_id: "",
+    // type_id: "",
     maintenance_cycle: "",
   });
 
@@ -101,8 +101,8 @@ export default function CreateMaintenance() {
         const data = res.data.data;
 
         setForm({
-         type_id: data.type_id ? String(data.type_id) : "",          
-          maintenance_cycle:  data.maintenance_cycle_name ,
+          type_id: data.type_id ? String(data.type_id) : "",
+          maintenance_cycle: data.maintenance_cycle_name,
         });
       } else {
         toast.error(res.data?.message || "Failed to load maintenance type");
@@ -137,23 +137,23 @@ export default function CreateMaintenance() {
       toast.error("Please enter Purpose of Visit");
       return;
     }
-    
-    const maintenanceCycle = form.maintenance_cycle
-  .split(",")
-  .map((item) => item.trim())
-  .filter((item) => item !== "");
 
-if (maintenanceCycle.length === 0) {
-  toast.error("Please enter valid Purpose of Visit");
-  return;
-}
+    const maintenanceCycle = form.maintenance_cycle
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item !== "");
+
+    if (maintenanceCycle.length === 0) {
+      toast.error("Please enter valid Purpose of Visit");
+      return;
+    }
 
     try {
       setLoading(true);
 
       const payload = {
         type_id: String("2"),
-        maintenance_cycles: maintenanceCycle,                
+        maintenance_cycles: maintenanceCycle,
       };
 
       let res;
@@ -196,7 +196,7 @@ if (maintenanceCycle.length === 0) {
 
   const handleClear = () => {
     setForm({
-  //    type_id: "",
+      //    type_id: "",
       maintenance_cycle: "",
     });
   };
@@ -244,28 +244,26 @@ if (maintenanceCycle.length === 0) {
               </div>
             </div> */}
 
-            <div>
+            <div className="md:col-span-2">
               <label className="form-label">Purpose of Visit</label>
- <input
+              <input
                 type="hidden"
                 name={form.type_id}
                 value="2"
               />
-               <input
+              <input
                 type="hidden"
                 name="id"
                 value={form.maintenance_cycle_id}
               />
               <input
                 type="text"
-                placeholder="Enter Purpose of Visit"
+                placeholder='Can be added using "," ex. Call Out, Weekly Testing'
                 className="form-input"
                 value={form.maintenance_cycle}
                 onChange={(e) => update("maintenance_cycle", e.target.value)}
                 disabled={loading}
               />
-
-           
             </div>
           </div>
 

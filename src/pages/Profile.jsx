@@ -698,6 +698,9 @@ function AddressModal({ profile, onClose, onRefresh }) {
 
   const [saving, setSaving] = useState(false);
 
+  const [newCityName, setNewCityName] = useState("");
+  const [addCityLoading, setAddCityLoading] = useState(false);
+
   const selectedCountryId = String(formData.countryid || "");
   const selectedStateId = String(formData.stateid || "");
 
@@ -788,7 +791,7 @@ function AddressModal({ profile, onClose, onRefresh }) {
       [e.target.name]: e.target.value,
     }));
   };
-  const handleCountryChange = (e) => {
+  const handleCountryChange = async (e) => {
     const countryid = e.target.value;
 
     const selected = countries.find(
@@ -808,12 +811,18 @@ function AddressModal({ profile, onClose, onRefresh }) {
       cityid: "",
     }));
 
+    setNewCityName("");
+
     if (!isSelectedUK && countryid) {
-      getStateList(countryid);
+     await getStateList(countryid);
+    }
+
+    if (isSelectedUK) {
+     await getCityList("37");
     }
   };
 
-  const handleStateChange = (e) => {
+  const handleStateChange = async (e) => {
     const stateid = e.target.value;
 
     setFormData((prev) => ({
@@ -823,7 +832,7 @@ function AddressModal({ profile, onClose, onRefresh }) {
     }));
 
     if (stateid) {
-      getCityList(stateid);
+     await getCityList(stateid);
     }
   };
 
@@ -834,6 +843,75 @@ function AddressModal({ profile, onClose, onRefresh }) {
       ...prev,
       cityid,
     }));
+
+    if (cityid !== "other") {
+      setNewCityName("");
+    }
+  };
+
+  const handleAddCity = async () => {
+    const cityName = newCityName.trim();
+
+    if (!cityName) {
+      toast.error("Please enter city name.");
+      return;
+    }
+
+    const stateIdForCity = isUK ? "37" : formData.stateid;
+
+    if (!stateIdForCity) {
+      toast.error("Please select state first.");
+      return;
+    }
+
+    try {
+      setAddCityLoading(true);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/insertcity`,
+        {
+          stateid: Number(stateIdForCity),
+          cityname: cityName,
+        },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (response?.data?.success) {
+        toast.success(response?.data?.message || "City added successfully");
+
+        const newCityId =
+          response?.data?.data?.cityId ||
+          response?.data?.data?.cityid ||
+          response?.data?.data?.iCityId;
+
+        await getCityList(stateIdForCity, true);
+
+        setFormData((prev) => ({
+          ...prev,
+          cityid: newCityId ? String(newCityId) : "",
+        }));
+
+        setNewCityName("");
+      } else {
+        toast.error(response?.data?.message || "Failed to add city.");
+      }
+    } catch (error) {
+      const msg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to add city.";
+
+      toast.error(msg);
+    } finally {
+      setAddCityLoading(false);
+    }
+  };
+
+  const emptyToSpace = (value) => {
+    const finalValue = String(value ?? "").trim();
+    return finalValue === "" ? " " : finalValue;
   };
 
   const handleSave = async () => {
@@ -845,9 +923,9 @@ function AddressModal({ profile, onClose, onRefresh }) {
         email: profile?.email || "",
         mobile_number: profile?.mobile_number || "",
         role_id: profile?.role_id || "",
-        postcode: formData.postcode,
-        address: formData.address,
-        address_line_2: formData.address2,
+        postcode: emptyToSpace(formData.postcode),
+        address: emptyToSpace(formData.address),
+        address_line_2: emptyToSpace(formData.address2) || "-",
         countryid: formData.countryid,
         stateid: isUK ? "37" : formData.stateid,
         cityid: formData.cityid,
@@ -901,18 +979,42 @@ function AddressModal({ profile, onClose, onRefresh }) {
           />
         )}
 
-        <SelectInput
-          label="City"
-          name="cityid"
-          value={String(formData.cityid || "")}
-          onChange={handleCityChange}
-          loading={cityLoading}
-          options={cityList}
-          getValue={getCityId}
-          getLabel={getCityName}
-          placeholder="Select City"
-          disabled={!formData.stateid && !isUK}
-        />
+        <div>
+          <SelectInput
+            label="City"
+            name="cityid"
+            value={String(formData.cityid || "")}
+            onChange={handleCityChange}
+            loading={cityLoading}
+            options={cityList}
+            getValue={getCityId}
+            getLabel={getCityName}
+            placeholder="Select City"
+            disabled={!formData.stateid && !isUK}
+            showOtherOption={Boolean(formData.stateid || isUK)}
+          />
+
+          {formData.cityid === "other" && (
+            <div className="mt-3 flex gap-3">
+              <input
+                type="text"
+                className="h-11 w-full rounded-lg border border-gray-300 px-4 text-sm text-gray-800 shadow-sm focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                placeholder="Enter new city"
+                value={newCityName}
+                onChange={(e) => setNewCityName(e.target.value)}
+              />
+
+              <button
+                type="button"
+                onClick={handleAddCity}
+                disabled={addCityLoading}
+                className="whitespace-nowrap rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {addCityLoading ? "Adding..." : "Add City"}
+              </button>
+            </div>
+          )}
+        </div>
 
         <Input
           label="Postal Code"
@@ -1060,7 +1162,7 @@ function getCountryName(item) {
 }
 
 function getStateId(item) {
-  return item?.stateid || "";
+  return item?.stateid || item?.state_id || item?.iStateId || item?.id || "";
 }
 
 function getStateName(item) {
@@ -1068,7 +1170,7 @@ function getStateName(item) {
 }
 
 function getCityId(item) {
-  return item?.cityid || "";
+  return item?.cityid || item?.cityId || item?.iCityId || item?.id || "";
 }
 
 function getCityName(item) {
@@ -1121,6 +1223,7 @@ function SelectInput({
   placeholder,
   loading,
   disabled,
+  showOtherOption = false,
 }) {
   return (
     <div>
@@ -1128,15 +1231,16 @@ function SelectInput({
         {label}
       </label>
 
+      <div className="relative">
       <select
         name={name}
         value={value || ""}
         onChange={onChange}
         disabled={disabled || loading}
-        className="h-11 w-full rounded-lg border border-gray-300 px-4 text-sm text-gray-800 shadow-sm focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:disabled:bg-gray-800"
+        className="h-11 w-full appearance-none rounded-lg border border-gray-300 px-4 pr-11 text-sm text-gray-800 shadow-sm focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:disabled:bg-gray-800"
       >
         <option value="">{loading ? "Loading..." : placeholder}</option>
-
+        {showOtherOption && <option value="other">Other</option>}
         {options?.map((item, index) => {
           const optionValue = String(getValue(item));
           const optionLabel = getLabel(item);
@@ -1147,7 +1251,24 @@ function SelectInput({
             </option>
           );
         })}
+        
       </select>
+      <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+          <svg
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="none"
+          >
+            <path
+              d="M5 7.5L10 12.5L15 7.5"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+      </div>
     </div>
   );
 }

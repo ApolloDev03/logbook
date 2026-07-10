@@ -185,6 +185,7 @@ export default function Dashboard() {
   );
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedEndDate, setSelectedEndDate] = useState(null); // end date
 
   const getNearestSunday = (date) => {
     if (!date) return "";
@@ -242,7 +243,7 @@ export default function Dashboard() {
 
       if (selectedDate) {
         payload.start_date = format(selectedDate, "yyyy-MM-dd");
-        payload.end_date = getNearestSunday(selectedDate);
+        payload.end_date = format(selectedEndDate || selectedDate, "yyyy-MM-dd");
       }
 
       console.log("Customer Dashboard Payload:", payload);
@@ -259,7 +260,12 @@ export default function Dashboard() {
           // id: `FS-${String(item.log_id).padStart(4, "0")}`,
            id: item.company_unique_log_id,
           log_id: item.log_id,          
-          type: `${item.details[0].System} - ${item.details[0].Purpose_of_Visit}`,
+          details: Array.isArray(item.details)
+            ? item.details.map((detail) => ({
+              system: detail?.System || "-",
+              purpose: detail?.Purpose_of_Visit || "-",
+            }))
+            : [],
           engineer: item.engineer || "-",
           company: item.customer_company || "-",
           building: item.building || "-",
@@ -304,7 +310,7 @@ export default function Dashboard() {
   };
   useEffect(() => {
     fetchDashboard();
-  }, [selectedYear, selectedMonth, selectedDate]);
+  }, [selectedYear, selectedMonth, selectedDate, selectedEndDate]);
 
   const summary = dashboardData?.summary || {};
 
@@ -620,6 +626,8 @@ export default function Dashboard() {
         setSelectedMonth={setSelectedMonth}
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
+        selectedEndDate={selectedEndDate}
+        setSelectedEndDate={setSelectedEndDate}
       />
 
       <div className="w-full overflow-hidden">
@@ -719,8 +727,20 @@ export default function Dashboard() {
                           </td>
  
                           <td className="table-td whitespace-nowrap">
-                            {row.type}
-                          </td>                     
+                            {row.details?.length > 0 ? (
+                              <div className="space-y-1">
+                                {row.details.map((detail, index) => (
+                                  <div key={index}>
+                                    <span>{detail.system}</span>
+                                    <span> - </span>
+                                    <span>{detail.purpose}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              "-"
+                            )}
+                          </td>                  
                         
                           <td className="table-td whitespace-nowrap">
                             {row.building}

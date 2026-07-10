@@ -439,6 +439,16 @@ export default function SignIn() {
         <div className="flex w-full flex-1 flex-col lg:w-1/2">
           <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
             <div>
+              {/* Mobile Logo - only visible below desktop */}
+              <div className="mb-8 flex justify-center lg:hidden">
+                <a href="/" className="inline-block">
+                  <img
+                    src={logo}
+                    alt="Attentive Fire"
+                    className="h-auto max-w-[120px]"
+                  />
+                </a>
+              </div>
               <div className="mb-5 sm:mb-8">
                 <h1 className="mb-2 text-[37px] font-semibold leading-tight text-gray-800 dark:text-white/90">
                   Sign In
@@ -520,11 +530,10 @@ export default function SignIn() {
                         />
 
                         <span
-                          className={`flex h-5 w-5 items-center justify-center rounded-md border-[1.25px] ${
-                            remember
+                          className={`flex h-5 w-5 items-center justify-center rounded-md border-[1.25px] ${remember
                               ? "border-blue-500 bg-blue-500"
                               : "border-gray-300 bg-transparent dark:border-gray-700"
-                          }`}
+                            }`}
                         >
                           <svg
                             className={remember ? "block" : "hidden"}

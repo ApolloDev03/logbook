@@ -270,7 +270,7 @@ export default function BuildingLogs() {
               </span>
 
               <img
-                src="/images/logo/logo-dark.svg" // Update with your actual logo path
+                src="/images/logo/logo-new-dark.png" // Update with your actual logo path
                 alt="Fire Systems"
                 className="h-8 w-auto object-contain"
               />

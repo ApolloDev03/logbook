@@ -311,7 +311,12 @@ export default function Dashboard() {
           // id: `FS-${String(item.log_id).padStart(4, "0")}`,          
           id: item.company_unique_log_id,
           log_id: item.log_id,
-          type: `${item.details[0].System} - ${item.details[0].Purpose_of_Visit}`,
+          details: Array.isArray(item.details)
+            ? item.details.map((detail) => ({
+              system: detail?.System || "-",
+              purpose: detail?.Purpose_of_Visit || "-",
+            }))
+            : [],
           engineer: item.engineer || "-",
           company: item.customer_company || "-",
           building: item.building || "-",
@@ -775,7 +780,19 @@ export default function Dashboard() {
                             {row.company}
                           </td>
                           <td className="table-td whitespace-nowrap">
-                            {row.type}
+                            {row.details?.length > 0 ? (
+                              <div className="space-y-1">
+                                {row.details.map((detail, index) => (
+                                  <div key={index}>
+                                    <span>{detail.system}</span>
+                                    <span> - </span>
+                                    <span>{detail.purpose}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              "-"
+                            )}
                           </td>
 
                           <td className="table-td whitespace-nowrap">
