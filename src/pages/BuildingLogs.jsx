@@ -239,6 +239,9 @@ export default function BuildingLogs() {
               <p className="mt-1 text-sm text-slate-700">
                 Address: {headerInfo?.address || "-"} {headerInfo?.address_line_2 || "-"}
               </p>
+              <p className="mt-1 text-xs text-slate-700">
+                Postcode :  {headerInfo?.postcode || "-"}
+              </p>
             </div>
 
             <div>
@@ -260,9 +263,7 @@ export default function BuildingLogs() {
               <h3 className="mt-1 text-xl font-semibold text-slate-400">
                 {headerInfo?.customer_name || "-"}
               </h3>
-    <p className="mt-1 text-xs text-slate-700">
-                Postcode :  {headerInfo?.postcode || "-"}
-              </p>
+    
             </div>
             <div className="mt-3 flex items-center gap-2">
               <span className="text-xs font-semibold uppercase text-slate-500">

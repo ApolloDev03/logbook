@@ -96,11 +96,11 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="relative z-10 bg-white p-6 dark:bg-gray-900 sm:p-0">
-      <div className="relative flex h-screen w-full flex-col justify-center dark:bg-gray-900 sm:p-0 lg:flex-row">
+    <div className="relative z-10 min-h-screen bg-white px-6 py-4 dark:bg-gray-900 sm:p-0">
+      <div className="relative flex min-h-screen w-full flex-col justify-start dark:bg-gray-900 sm:p-0 lg:h-screen lg:flex-row lg:justify-center">
         {/* Left Form */}
-        <div className="flex w-full flex-1 flex-col lg:w-1/2">
-          <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
+        <div className="flex w-full flex-col lg:w-1/2 lg:flex-1">
+          <div className="mx-auto flex w-full max-w-md flex-col justify-start pt-7 lg:flex-1 lg:justify-center lg:pt-0">
             <div>
               {/* Mobile Logo - only visible below desktop */}
               <div className="mb-8 flex justify-center lg:hidden">
