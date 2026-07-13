@@ -756,7 +756,7 @@ export default function EngineerDashboard() {
             <div className="card overflow-hidden rounded-xl">
               <div className="m-4 sm:m-6">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                 Log of the Day
+                  Log of the Day
                 </h3>
               </div>
 
@@ -923,26 +923,31 @@ export default function EngineerDashboard() {
 
               <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
 
-                {
-                  roleId != 3 &&
-                  <Info
-                    label="Customer Name"
-                    value={selectedLog?.customer_name}
-                  />
-                }
+                <Info
+                  label="Company Name"
+                  value={selectedLog?.customer_name}
+                />
 
                 <Info
                   label="Building Name"
                   value={selectedLog?.building_name}
                 />
-                <Info label="Postcode" value={selectedLog?.postcode} />
+                <Info label="UPRN" value={selectedLog?.uprn_no} />
+                <Info label="Address Line 1" value={selectedLog?.address} />
+                <Info label="Address Line 2" value={selectedLog?.address_line_2} />
                 <Info label="Country" value={selectedLog?.country_name} />
-                <Info label="State" value={selectedLog?.state_name} />
+                {!["uk", "united kingdom", "United Kingdom"].includes(
+                  selectedLog?.country_name?.toLowerCase()
+                ) && (
+                    <Info
+                      label="State"
+                      value={selectedLog?.state_name}
+                    />
+                  )}
                 <Info label="City" value={selectedLog?.city_name} />
-                <Info label="Landmark" value={selectedLog?.landmark} />
+                <Info label="Postcode" value={selectedLog?.postcode} />
+                <Info label="Access Information" value={selectedLog?.landmark} />
 
-
-                <Info label="Address" value={selectedLog?.address} />
 
               </div>
             </div>
@@ -965,7 +970,7 @@ export default function EngineerDashboard() {
                       value={formatDate(entry?.entry_date)}
                     />
                     <Info
-                      label="start Time"
+                      label="Start Time"
                       value={`${formatOnlyTime(entry?.start_time)} `}
                     />
                     <Info
