@@ -73,6 +73,33 @@ const getStoredEngineerBuilding = () => {
 
   return null;
 };
+
+const LOG_TIME_ZONE = "Europe/London";
+
+const getLondonDateTimeParts = () => {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: LOG_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date());
+
+  const getPart = (type) => {
+    return parts.find((item) => item.type === type)?.value || "";
+  };
+
+  return {
+    year: getPart("year"),
+    month: getPart("month"),
+    day: getPart("day"),
+    hour: getPart("hour"),
+    minute: getPart("minute"),
+  };
+};
+
 function formatTime(time) {
   if (!time) return "";
 
@@ -690,12 +717,11 @@ const getAuthUser = () => {
     return {};
   }
 };
-function getCurrentTime() {
-  const now = new Date();
-  const hour = String(now.getHours()).padStart(2, "0");
-  const minute = String(now.getMinutes()).padStart(2, "0");
 
-  return `${hour}:${minute}`;
+function getCurrentTime() {
+  const london = getLondonDateTimeParts();
+
+  return `${london.hour}:${london.minute}`;
 }
 
 export default function CreateLog() {
@@ -1046,13 +1072,10 @@ export default function CreateLog() {
     }
   };
   function getTodayDate() {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const dd = String(today.getDate()).padStart(2, "0");
+  const london = getLondonDateTimeParts();
 
-    return `${yyyy}-${mm}-${dd}`;
-  }
+  return `${london.year}-${london.month}-${london.day}`;
+}
 
   function getDateTime(date, time) {
     if (!date || !time) return "";
