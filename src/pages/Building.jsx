@@ -192,16 +192,16 @@ export default function Building() {
       }
 
       setLoading(true);
-      
+
       const roleName = String(authUser?.role_name || "")
         .trim()
         .toLowerCase();
-        
+
       const response = await axios.post(
         `${apiUrl}/auth/buildinglist`,
         {
           //customer_id: roleId == 3 ? authUser?.customer?.customer_id : "",
-          customer_id:  authUser?.customer?.customer_id != '' ? authUser?.customer?.customer_id  : "",
+          customer_id: authUser?.customer?.customer_id != '' ? authUser?.customer?.customer_id : "",
           page: pageNumber,
           limit: customLimit,
           search: search,
@@ -469,7 +469,7 @@ export default function Building() {
         const qrcode = response?.data?.data || {};
 
         // console.log(qrcode,"qrdataaaa");
-        
+
 
         setQrData({
           qrCode: qrcode?.qrCode || "",
@@ -575,6 +575,23 @@ export default function Building() {
     getBuildingList(newPage);
   };
 
+  const getVisiblePages = () => {
+    const visibleCount = 5;
+
+    if (totalPages <= visibleCount) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const maxStartPage = totalPages - visibleCount + 1;
+
+    const startPage = Math.min(page, maxStartPage);
+
+    return Array.from(
+      { length: visibleCount },
+      (_, index) => startPage + index
+    );
+  };
+
   const getShowingStart = () => {
     if (total === 0) return 0;
     return (page - 1) * limit + 1;
@@ -642,25 +659,25 @@ export default function Building() {
               className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
             />
           </div>
-              <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
-          {canWriteBuilding && (
-            <button
-              type="button"
-              onClick={() => navigate("/create-building")}
-              className="btn-gray w-full justify-center sm:w-auto"
-            >
-              Add Building
-            </button>
-          )}
+          <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
+            {canWriteBuilding && (
+              <button
+                type="button"
+                onClick={() => navigate("/create-building")}
+                className="btn-gray w-full justify-center sm:w-auto"
+              >
+                Add Building
+              </button>
+            )}
 
-          <button
+            <button
               type="button"
               onClick={() => navigate("/building-import")}
               className="rounded-lg bg-green-600 px-5 py-2.5 font-medium text-white transition hover:bg-green-700"
             >
               Import
             </button>
-            </div>
+          </div>
         </div>
 
         <div className="w-full overflow-x-auto">
@@ -670,7 +687,7 @@ export default function Building() {
                 onClick={handleSortByName}
                 className="border-b border-gray-100 dark:border-gray-800"
               >
-                 <th className="table-th whitespace-nowrap">UPRN</th>
+                <th className="table-th whitespace-nowrap">UPRN</th>
                 <th className="table-th whitespace-nowrap">Building Name</th>
                 {!isCustomerRole && (
                   <>
@@ -702,9 +719,9 @@ export default function Building() {
 
                   return (
                     <tr key={building.building_id} className="table-row">
-                     <td className="table-td whitespace-nowrap">
-      {building.uprn_no || "-"}
-    </td>
+                      <td className="table-td whitespace-nowrap">
+                        {building.uprn_no || "-"}
+                      </td>
 
                       <td
                         onClick={() => getBuildingById(building.building_id)}
@@ -713,16 +730,16 @@ export default function Building() {
                         {building.building_name || "-"}
                       </td>
                       {!isCustomerRole && (
-  <>
-    <td className="table-td whitespace-nowrap">
-      {building.customer_company_name || "-"}
-    </td>
+                        <>
+                          <td className="table-td whitespace-nowrap">
+                            {building.customer_company_name || "-"}
+                          </td>
 
-    {/* <td className="table-td whitespace-nowrap">
+                          {/* <td className="table-td whitespace-nowrap">
       {building.customer_name || "-"}
     </td> */}
-  </>
-)}
+                        </>
+                      )}
 
                       <td className="table-td whitespace-nowrap">
                         {building.postcode || "-"}
@@ -906,28 +923,28 @@ export default function Building() {
               Show
             </span>
 
-          <div className="relative">       
-            <select
-              value={limit}
-              onChange={(e) => {
-                const newLimit = Number(e.target.value);
+            <div className="relative">
+              <select
+                value={limit}
+                onChange={(e) => {
+                  const newLimit = Number(e.target.value);
 
-                setLimit(newLimit);
-                setPage(1);
+                  setLimit(newLimit);
+                  setPage(1);
 
-                // Fetch first page with new limit
-                getBuildingList(1, newLimit);
-              }}
-              className="rounded-lg border appearance-none pr-6 border-gray-300 px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-              <option value={200}>200</option>
-              <option value={500}>500</option>
-            </select>
-            <svg
+                  // Fetch first page with new limit
+                  getBuildingList(1, newLimit);
+                }}
+                className="rounded-lg border appearance-none pr-6 border-gray-300 px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+                <option value={200}>200</option>
+                <option value={500}>500</option>
+              </select>
+              <svg
                 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-black dark:text-white"
                 fill="none"
                 stroke="currentColor"
@@ -943,7 +960,16 @@ export default function Building() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={page <= 1 || loading}
+              onClick={() => handlePageChange(1)}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              First
+            </button>
+
             <button
               type="button"
               disabled={page <= 1 || loading}
@@ -953,22 +979,20 @@ export default function Building() {
               Previous
             </button>
 
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-              (pageNumber) => (
-                <button
-                  key={pageNumber}
-                  type="button"
-                  disabled={loading}
-                  onClick={() => handlePageChange(pageNumber)}
-                  className={`rounded-lg border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${pageNumber === page
+            {getVisiblePages().map((pageNumber) => (
+              <button
+                key={pageNumber}
+                type="button"
+                disabled={loading}
+                onClick={() => handlePageChange(pageNumber)}
+                className={`min-w-[40px] rounded-lg border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${pageNumber === page
                     ? "border-blue-600 bg-blue-600 text-white"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                    }`}
-                >
-                  {pageNumber}
-                </button>
-              ),
-            )}
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+                  }`}
+              >
+                {pageNumber}
+              </button>
+            ))}
 
             <button
               type="button"
@@ -977,6 +1001,15 @@ export default function Building() {
               className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               Next
+            </button>
+
+            <button
+              type="button"
+              disabled={page >= totalPages || loading}
+              onClick={() => handlePageChange(totalPages)}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Last
             </button>
           </div>
         </div>
@@ -1012,13 +1045,13 @@ export default function Building() {
             </h3>
 
             <div className="grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2 sm:gap-y-8 md:grid-cols-3">
-              {!isCustomerRole && ( <Info label="Company Name " value={selectedBuilding?.customer_company_name} />)}
+              {!isCustomerRole && (<Info label="Company Name " value={selectedBuilding?.customer_company_name} />)}
               <Info label="URPN" value={selectedBuilding?.uprn_no} />
               <Info
                 label="Building Name"
                 value={selectedBuilding?.building_name}
               />
-             {/* {authRoleId !== 3 && (
+              {/* {authRoleId !== 3 && (
   <>
     <Info label="Customer" value={selectedBuilding?.customer_name} />
   </>
@@ -1031,7 +1064,7 @@ export default function Building() {
                   {selectedBuilding?.address || "-"}
                 </p>
               </div>
-               <div className="">
+              <div className="">
                 <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                   Address Line 2
                 </p>
@@ -1040,19 +1073,19 @@ export default function Building() {
                 </p>
               </div>
               <Info label="Postcode" value={selectedBuilding?.postcode} />
-    <Info label="Country" value={selectedBuilding?.country_name} />
+              <Info label="Country" value={selectedBuilding?.country_name} />
 
-{!["uk", "united kingdom"].includes(
-  selectedBuilding?.country_name?.toLowerCase()
-) && (
-  <Info
-    label="State"
-    value={selectedBuilding?.state_name}
-  />
-)}
+              {!["uk", "united kingdom"].includes(
+                selectedBuilding?.country_name?.toLowerCase()
+              ) && (
+                  <Info
+                    label="State"
+                    value={selectedBuilding?.state_name}
+                  />
+                )}
               <Info label="City" value={selectedBuilding?.city_name} />
               <Info label="Access Information" value={selectedBuilding?.landmark} />
-          
+
 
             </div>
           </div>
@@ -1075,8 +1108,8 @@ export default function Building() {
         </button>
 
         <div className="text-center">
-          <h2 className="mb-5 pr-10 text-xl font-bold text-gray-900 dark:text-white">
-            Building QR Code
+          <h2 className="mb-5  text-xl  font-bold text-gray-900 dark:text-white">
+            Fire safety Log book
           </h2>
           <div className="mt-6 flex justify-center">
             {qrData?.qrCode ? (
@@ -1094,12 +1127,12 @@ export default function Building() {
               {qrData?.buildingInfo?.building_name || "-"}
             </h3>
 
-            <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+            {/* <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-300">
               Postcode: {qrData?.buildingInfo?.postcode || "-"}
-            </p>
+            </p> */}
 
             <p className="mt-3 break-words text-sm leading-6 text-gray-600 dark:text-gray-400">
-             Address : {qrData?.buildingInfo?.address || "-"} {qrData?.buildingInfo?.address_line_2 || "-"}
+               {qrData?.buildingInfo?.address || "-"} {qrData?.buildingInfo?.address_line_2 || "-"} {qrData?.buildingInfo?.postcode || "-"}
             </p>
 
             {/* <p className="mt-3 break-words text-sm leading-6 text-gray-600 dark:text-gray-400">
@@ -1108,7 +1141,7 @@ export default function Building() {
 
             <div className="mt-3 flex items-center justify-center gap-2 border-t border-gray-100 pt-4 dark:border-gray-800">
               <span className="text-md font-medium text-gray-500 dark:text-gray-400">
-                Powered by
+                Maintained by
               </span>
 
               <img
