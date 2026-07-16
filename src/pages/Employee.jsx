@@ -233,6 +233,23 @@ export default function Employee() {
     getEmployeeList(newPage);
   };
 
+  const getVisiblePages = () => {
+    const visibleCount = 5;
+
+    if (totalPages <= visibleCount) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const maxStartPage = totalPages - visibleCount + 1;
+
+    const startPage = Math.min(page, maxStartPage);
+
+    return Array.from(
+      { length: visibleCount },
+      (_, index) => startPage + index
+    );
+  };
+
   const toggleStatus = async (employee) => {
     try {
       const token = getToken();
@@ -585,7 +602,7 @@ export default function Employee() {
             <span className="text-sm text-gray-600 dark:text-gray-400">
               Show
             </span>
-            
+
             <div className="relative">
               <select
                 value={limit}
@@ -623,7 +640,16 @@ export default function Employee() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={page <= 1 || loading}
+              onClick={() => handlePageChange(1)}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              First
+            </button>
+
             <button
               type="button"
               disabled={page <= 1 || loading}
@@ -633,22 +659,20 @@ export default function Employee() {
               Previous
             </button>
 
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-              (pageNumber) => (
-                <button
-                  key={pageNumber}
-                  type="button"
-                  disabled={loading}
-                  onClick={() => handlePageChange(pageNumber)}
-                  className={`rounded-lg border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${pageNumber === page
+            {getVisiblePages().map((pageNumber) => (
+              <button
+                key={pageNumber}
+                type="button"
+                disabled={loading}
+                onClick={() => handlePageChange(pageNumber)}
+                className={`min-w-[40px] rounded-lg border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${pageNumber === page
                     ? "border-blue-600 bg-blue-600 text-white"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                    }`}
-                >
-                  {pageNumber}
-                </button>
-              ),
-            )}
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+                  }`}
+              >
+                {pageNumber}
+              </button>
+            ))}
 
             <button
               type="button"
@@ -657,6 +681,15 @@ export default function Employee() {
               className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               Next
+            </button>
+
+            <button
+              type="button"
+              disabled={page >= totalPages || loading}
+              onClick={() => handlePageChange(totalPages)}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Last
             </button>
           </div>
         </div>
