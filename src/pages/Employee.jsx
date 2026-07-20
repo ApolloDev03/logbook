@@ -62,6 +62,22 @@ const DeleteIcon = () => (
   </svg>
 );
 
+const SendMailIcon = () => (
+  <svg
+    className="h-5 w-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 8L12 13L21 8M5 19H19C20.1 19 21 18.1 21 17V7C21 5.9 20.1 5 19 5H5C3.9 5 3 5.9 3 7V17C3 18.1 3.9 19 5 19Z"
+    />
+  </svg>
+);
+
 const getToken = () => {
   return localStorage.getItem("auth_token") || "";
 };
@@ -90,6 +106,7 @@ export default function Employee() {
   const [roleLoading, setRoleLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [statusLoadingId, setStatusLoadingId] = useState(null);
+  const [mailLoadingId, setMailLoadingId] = useState(null);
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -400,7 +417,54 @@ export default function Employee() {
     setEmployees(sortedEmployees);
   };
 
+  const sendEmployeeLoginCredentials = async (empId) => {
+    if (!empId) {
+      toast.error("Employee ID not found.");
+      return;
+    }
 
+    try {
+      const token = getToken();
+
+      if (!token) {
+        toast.error("Token not found. Please login again.");
+        return;
+      }
+
+      setMailLoadingId(empId);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/employee_send_mail_password`,
+        {
+          emp_id: String(empId),
+        },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (response?.data?.success) {
+        toast.success(
+          response?.data?.message ||
+          "Login credentials sent successfully."
+        );
+      } else {
+        toast.error(
+          response?.data?.message ||
+          "Failed to send login credentials."
+        );
+      }
+    } catch (error) {
+      const msg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to send login credentials.";
+
+      toast.error(msg);
+    } finally {
+      setMailLoadingId(null);
+    }
+  };
 
 
   return (
@@ -577,6 +641,20 @@ export default function Employee() {
                             >
                               <DeleteIcon />
                             </button>
+
+                            <button
+                              type="button"
+                              title="Send Login Credentials"
+                              onClick={() => sendEmployeeLoginCredentials(emp.id)}
+                              disabled={mailLoadingId === emp.id}
+                              className="text-purple-500 transition-colors hover:text-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {mailLoadingId === emp.id ? (
+                                <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
+                              ) : (
+                                <SendMailIcon />
+                              )}
+                            </button>
                           </>
                         )}
                       </div>
@@ -666,8 +744,8 @@ export default function Employee() {
                 disabled={loading}
                 onClick={() => handlePageChange(pageNumber)}
                 className={`min-w-[40px] rounded-lg border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${pageNumber === page
-                    ? "border-blue-600 bg-blue-600 text-white"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+                  ? "border-blue-600 bg-blue-600 text-white"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
                   }`}
               >
                 {pageNumber}
