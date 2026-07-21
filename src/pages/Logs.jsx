@@ -67,6 +67,22 @@ const PrintIcon = () => (
   </svg>
 );
 
+const MailIcon = () => (
+  <svg
+    className="h-5 w-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 8L12 13L21 8M5 19H19C20.1 19 21 18.1 21 17V7C21 5.9 20.1 5 19 5H5C3.9 5 3 5.9 3 7V17C3 18.1 3.9 19 5 19Z"
+    />
+  </svg>
+);
+
 const SelectArrow = () => (
   <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
     <svg
@@ -209,6 +225,11 @@ export default function Logs() {
   const [printLoadingId, setPrintLoadingId] = useState(null);
   const [downloadLoadingId, setDownloadLoadingId] = useState(null);
 
+  const [mailModalOpen, setMailModalOpen] = useState(false);
+  const [mailLogId, setMailLogId] = useState(null);
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [mailSending, setMailSending] = useState(false);
+
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
 
@@ -283,7 +304,7 @@ export default function Logs() {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [viewModalOpen]);
+  }, [viewModalOpen, mailModalOpen]);
 
   const getCustomerDropdown = async () => {
     try {
@@ -780,6 +801,87 @@ export default function Logs() {
       );
     }
   };
+
+  const openMailModal = (logId) => {
+    setMailLogId(logId);
+    setRecipientEmail("");
+    setMailModalOpen(true);
+  };
+
+  const closeMailModal = () => {
+    if (mailSending) return;
+
+    setMailModalOpen(false);
+    setMailLogId(null);
+    setRecipientEmail("");
+  };
+
+  const isValidEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const sendLogPdfMail = async () => {
+    if (!mailLogId) {
+      toast.error("Log ID not found.");
+      return;
+    }
+
+    const emails = recipientEmail
+      .split(",")
+      .map((email) => email.trim())
+      .filter(Boolean);
+
+    if (emails.length === 0) {
+      toast.error("Please enter email address.");
+      return;
+    }
+
+    const invalidEmails = emails.filter((email) => !isValidEmail(email));
+
+    if (invalidEmails.length > 0) {
+      toast.error(`Invalid email: ${invalidEmails[0]}`);
+      return;
+    }
+
+    try {
+      if (!getToken()) {
+        toast.error("Token not found. Please login again.");
+        return;
+      }
+
+      setMailSending(true);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/pdfsendmail`,
+        {
+          log_id: Number(mailLogId),
+          recipient_email: emails.join(","),
+        },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (response?.data?.success) {
+        toast.success(
+          response?.data?.message || "Log PDF sent successfully via email"
+        );
+
+        closeMailModal();
+      } else {
+        toast.error(response?.data?.message || "Failed to send log PDF.");
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to send log PDF."
+      );
+    } finally {
+      setMailSending(false);
+    }
+  };
+
   return (
     <>
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1008,6 +1110,15 @@ export default function Logs() {
                               <PrintIcon />
                             </button>
 
+                            <button
+                              type="button"
+                              title="Send PDF Mail"
+                              onClick={() => openMailModal(log.log_id)}
+                              className="text-blue-500 hover:text-blue-700"
+                            >
+                              <MailIcon />
+                            </button>
+
                             {/* <button
                               type="button"
                               title="Download Excel"
@@ -1019,6 +1130,8 @@ export default function Logs() {
                             </button> */}
                           </>
                         )}
+
+
                       </div>
                     </td>
                   </tr>
@@ -1265,6 +1378,71 @@ export default function Logs() {
             </div>
           </div>
         )}
+      </PopupModal>
+
+      <PopupModal
+        open={mailModalOpen}
+        onClose={closeMailModal}
+        maxWidth="max-w-[520px]"
+        className="px-3 py-4 sm:px-4 sm:py-6"
+        bodyClassName="p-5 sm:p-7"
+      >
+        <button
+          type="button"
+          onClick={closeMailModal}
+          disabled={mailSending}
+          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl leading-none text-gray-400 transition hover:bg-gray-200 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-gray-800 dark:hover:bg-gray-700"
+        >
+          ×
+        </button>
+
+        <div className="pr-10">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            Send Log PDF
+          </h2>
+
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            Enter one email or multiple emails separated by comma.
+          </p>
+        </div>
+
+        <div className="mt-6">
+          <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Recipient Email
+          </label>
+
+          <textarea
+            value={recipientEmail}
+            onChange={(e) => setRecipientEmail(e.target.value)}
+            rows={4}
+            placeholder="example@gmail.com, another@gmail.com"
+            className="w-full rounded-lg border border-gray-300 px-3 py-3 text-sm text-gray-800 shadow-sm focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          />
+
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            Example: abc@gmail.com, test12@gmail.com
+          </p>
+        </div>
+
+        <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={closeMailModal}
+            disabled={mailSending}
+            className="rounded-lg border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+          >
+            Close
+          </button>
+
+          <button
+            type="button"
+            onClick={sendLogPdfMail}
+            disabled={mailSending}
+            className="rounded-lg btn-primary px-5 py-3 text-sm font-semibold text-white  disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {mailSending ? "Sending..." : "Send Mail"}
+          </button>
+        </div>
       </PopupModal>
     </>
   );
