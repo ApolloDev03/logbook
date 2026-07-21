@@ -62,6 +62,22 @@ const DeleteIcon = () => (
   </svg>
 );
 
+const SendMailIcon = () => (
+  <svg
+    className="h-5 w-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 8L12 13L21 8M5 19H19C20.1 19 21 18.1 21 17V7C21 5.9 20.1 5 19 5H5C3.9 5 3 5.9 3 7V17C3 18.1 3.9 19 5 19Z"
+    />
+  </svg>
+);
+
 const getToken = () => {
   return localStorage.getItem("auth_token") || "";
 };
@@ -110,10 +126,10 @@ const getCustomerPermission = () => {
   const customerPermission = permissions.find((item) => {
     const name = String(
       item?.permission_name ||
-        item?.name ||
-        item?.module_name ||
-        item?.menu_name ||
-        "",
+      item?.name ||
+      item?.module_name ||
+      item?.menu_name ||
+      "",
     ).toLowerCase();
 
     return Number(item?.permission_id) === 2 || name.includes("customer");
@@ -139,6 +155,8 @@ export default function Customer() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [statusLoadingId, setStatusLoadingId] = useState(null);
   const [viewLoading, setViewLoading] = useState(false);
+
+  const [mailLoadingId, setMailLoadingId] = useState(null);
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -478,6 +496,60 @@ export default function Customer() {
     setSortOrder(newOrder);
     setCustomers(sortedCustomers);
   };
+
+  const sendCustomerCredentials = async (customer) => {
+    const userId =
+      customer?.user_id ||
+      customer?.id ||
+      customer?.customer_id;
+
+    if (!userId) {
+      toast.error("Customer user ID not found.");
+      return;
+    }
+
+    try {
+      const token = getToken();
+
+      if (!token) {
+        toast.error("Token not found. Please login again.");
+        return;
+      }
+
+      setMailLoadingId(customer.customer_id);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/customersendmail`,
+        {
+          user_id: String(userId),
+        },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (response?.data?.success) {
+        toast.success(
+          response?.data?.message ||
+          "Password generated and email sent successfully"
+        );
+      } else {
+        toast.error(
+          response?.data?.message ||
+          "Failed to send customer credentials."
+        );
+      }
+    } catch (error) {
+      const msg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to send customer credentials.";
+
+      toast.error(msg);
+    } finally {
+      setMailLoadingId(null);
+    }
+  };
   return (
     <>
       <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
@@ -648,6 +720,20 @@ export default function Customer() {
                             >
                               <DeleteIcon />
                             </button>
+
+                            <button
+                              type="button"
+                              title="Send Login Credentials"
+                              onClick={() => sendCustomerCredentials(customer)}
+                              disabled={mailLoadingId === customer.customer_id}
+                              className="text-purple-500 transition-colors hover:text-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {mailLoadingId === customer.customer_id ? (
+                                <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
+                              ) : (
+                                <SendMailIcon />
+                              )}
+                            </button>
                           </>
                         )}
                       </div>
@@ -674,28 +760,28 @@ export default function Customer() {
               Show
             </span>
 
-           <div className="relative">   
-            <select
-              value={limit}
-              onChange={(e) => {
-                const newLimit = Number(e.target.value);
+            <div className="relative">
+              <select
+                value={limit}
+                onChange={(e) => {
+                  const newLimit = Number(e.target.value);
 
-                setLimit(newLimit);
-                setPage(1);
+                  setLimit(newLimit);
+                  setPage(1);
 
-                // Fetch first page with new limit
-                getCustomerList(1, newLimit);
-              }}
-              className="rounded-lg border appearance-none pr-6 border-gray-300 px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-              <option value={200}>200</option>
-              <option value={500}>500</option>
-            </select>
-            <svg
+                  // Fetch first page with new limit
+                  getCustomerList(1, newLimit);
+                }}
+                className="rounded-lg border appearance-none pr-6 border-gray-300 px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+                <option value={200}>200</option>
+                <option value={500}>500</option>
+              </select>
+              <svg
                 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-black dark:text-white"
                 fill="none"
                 stroke="currentColor"
@@ -737,8 +823,8 @@ export default function Customer() {
                 disabled={loading}
                 onClick={() => handlePageChange(pageNumber)}
                 className={`min-w-[40px] rounded-lg border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${pageNumber === page
-                    ? "border-blue-600 bg-blue-600 text-white"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+                  ? "border-blue-600 bg-blue-600 text-white"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
                   }`}
               >
                 {pageNumber}
@@ -801,7 +887,7 @@ export default function Customer() {
               </h3>
 
               <div className="grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2 sm:gap-y-8 md:grid-cols-3">
-                   <Info
+                <Info
                   label="Prefix"
                   value={selectedCustomer?.Prefix}
                 />
@@ -809,33 +895,33 @@ export default function Customer() {
                   label="Company Name"
                   value={selectedCustomer?.customer_company_name}
                 />
-              <div className="">
+                <div className="">
                   <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                     Address Line 1
                   </p>
                   <p className="max-w-full break-words text-sm font-semibold leading-6 text-gray-900 dark:text-white sm:max-w-[260px]">
                     {selectedCustomer?.customer_address || "-"}
                   </p>
-                  
+
                 </div>
-                  <div className="">
+                <div className="">
                   <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                     Address Line 2
                   </p>
                   <p className="max-w-full break-words text-sm font-semibold leading-6 text-gray-900 dark:text-white sm:max-w-[260px]">
                     {selectedCustomer?.customer_address_line_2 || "-"}
                   </p>
-                  
+
                 </div>
-                 <Info label="Country" value={selectedCustomer?.country_name} />
-                            {!["uk", "united kingdom"].includes(
-  selectedCustomer?.country_name?.toLowerCase()
-) && (
-  <Info
-    label="State"
-    value={selectedCustomer?.state_name}
-  />
-)}  
+                <Info label="Country" value={selectedCustomer?.country_name} />
+                {!["uk", "united kingdom"].includes(
+                  selectedCustomer?.country_name?.toLowerCase()
+                ) && (
+                    <Info
+                      label="State"
+                      value={selectedCustomer?.state_name}
+                    />
+                  )}
                 <Info label="City" value={selectedCustomer?.city_name} />
                 <Info
                   label="Postal Code"
@@ -846,12 +932,12 @@ export default function Customer() {
 
             <div className="mt-5 rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:mt-6 sm:p-6">
               <h3 className="mb-6 text-base font-semibold text-gray-900 dark:text-white sm:mb-8 sm:text-lg">
-                 Customer Information
+                Customer Information
               </h3>
 
               <div className="grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2 sm:gap-y-8 md:grid-cols-3">
-                
-                  <Info
+
+                <Info
                   label="Customer Name"
                   value={selectedCustomer?.customer_name}
                 />
@@ -899,10 +985,10 @@ export default function Customer() {
                     </p>
                   )}
                 </div>
-               
 
-              
-               
+
+
+
               </div>
             </div>
           </>
