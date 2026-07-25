@@ -233,6 +233,8 @@ export default function Logs() {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
 
+
+
   // const [showDatePicker, setShowDatePicker] = useState(false);
   // const datePickerRef = useRef(null);
 
@@ -1456,6 +1458,10 @@ function UniqueDateRangePicker({
   const [open, setOpen] = useState(false);
   const pickerRef = useRef(null);
 
+  const [headerView, setHeaderView] = useState("days"); // "days" | "months" | "years"
+  const [yearGridStart, setYearGridStart] = useState(null);
+  const [monthGridYear, setMonthGridYear] = useState(null);
+
   const parseLocalDate = (dateValue) => {
     if (!dateValue) return null;
 
@@ -1578,9 +1584,60 @@ function UniqueDateRangePicker({
             color: #fff !important;
           }
 
+          .react-datepicker__header:not(.react-datepicker__header--has-time-select, .react-datepicker__header--middle, .react-datepicker__header--bottom) {
+    border-top-right-radius: 0.3rem;
+    width: 335PX;
+}
+
           .react-datepicker__day--outside-month {
             color: #cbd5e1;
           }
+
+          .calendar-title-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.year-grid,
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.year-grid-item,
+.month-grid-item {
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  padding: 10px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  cursor: pointer;
+}
+
+.year-grid-item:hover,
+.month-grid-item:hover {
+  background: #f3f4f6;
+}
+
+.year-grid-item.is-outside {
+  color: #cbd5e1;
+}
+
+.year-grid-item.is-selected,
+.month-grid-item.is-selected {
+  background: #2563eb;
+  color: #fff;
+}
+
+.hide-day-grid .react-datepicker__day-names,
+.hide-day-grid .react-datepicker__month {
+  display: none;
+}
         `}
       </style>
 
@@ -1604,10 +1661,11 @@ function UniqueDateRangePicker({
         </button>
 
         {open && (
-          <div className="absolute left-1/2 top-full z-[9999] mt-3 w-[calc(100vw-32px)] max-w-[380px] -translate-x-1/2 rounded-2xl bg-white p-3 shadow-2xl dark:bg-gray-900 sm:left-0 sm:w-[380px] sm:translate-x-0 md:left-auto md:right-0 md:translate-x-0">
+          <div className={`absolute left-1/2 top-full z-[9999] mt-3 w-[calc(100vw-32px)] max-w-[360px] -translate-x-1/2 rounded-2xl bg-white p-3 shadow-2xl dark:bg-gray-900 sm:left-0 sm:w-[380px] sm:translate-x-0 md:left-auto md:right-0 md:translate-x-0 ${headerView !== "days" ? "hide-day-grid" : ""}`}>
             <DatePicker
               selected={startDate}
               onChange={handleDateChange}
+              onCalendarClose={() => setHeaderView("days")}
               startDate={startDate}
               endDate={endDate}
               selectsRange
@@ -1615,35 +1673,115 @@ function UniqueDateRangePicker({
               maxDate={new Date()}
               renderCustomHeader={({
                 date,
+                changeYear,
+                changeMonth,
                 decreaseMonth,
                 increaseMonth,
                 prevMonthButtonDisabled,
                 nextMonthButtonDisabled,
-              }) => (
-                <div className="calendar-header">
-                  <button
-                    type="button"
-                    onClick={decreaseMonth}
-                    disabled={prevMonthButtonDisabled}
-                    className="calendar-arrow"
-                  >
-                    &#10094;
-                  </button>
+              }) => {
+                const currentYear = date.getFullYear();
 
-                  <span className="calendar-title">
-                    {format(date, "MMMM yyyy")}
-                  </span>
+                if (headerView === "years") {
+                  const start = yearGridStart ?? Math.floor(currentYear / 10) * 10;
+                  const years = Array.from({ length: 12 }, (_, i) => start - 1 + i);
 
-                  <button
-                    type="button"
-                    onClick={increaseMonth}
-                    disabled={nextMonthButtonDisabled}
-                    className="calendar-arrow"
-                  >
-                    &#10095;
-                  </button>
-                </div>
-              )}
+                  return (
+                    <div className="flex flex-col">
+                      <div className="calendar-header">
+                        <button type="button" className="calendar-arrow" onClick={() => setYearGridStart(start - 10)}>
+                          &#10094;
+                        </button>
+
+                        <span className="calendar-title">{start} - {start + 9}</span>
+
+                        <button type="button" className="calendar-arrow" onClick={() => setYearGridStart(start + 10)}>
+                          &#10095;
+                        </button>
+                      </div>
+
+                      <div className="year-grid">
+                        {years.map((year) => (
+                          <button
+                            key={year}
+                            type="button"
+                            onClick={() => {
+                              setMonthGridYear(year);
+                              setHeaderView("months");
+                            }}
+                            className={`year-grid-item ${year === currentYear ? "is-selected" : ""} ${year < start || year > start + 9 ? "is-outside" : ""
+                              }`}
+                          >
+                            {year}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (headerView === "months") {
+                  const year = monthGridYear ?? currentYear;
+                  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+                  return (
+                    <div className="flex flex-col">
+                      <div className="calendar-header">
+                        <button type="button" className="calendar-arrow" onClick={() => setMonthGridYear(year - 1)}>
+                          &#10094;
+                        </button>
+
+                        <span className="calendar-title">{year}</span>
+
+                        <button type="button" className="calendar-arrow" onClick={() => setMonthGridYear(year + 1)}>
+                          &#10095;
+                        </button>
+                      </div>
+
+                      <div className="month-grid">
+                        {monthNames.map((name, index) => (
+                          <button
+                            key={name}
+                            type="button"
+                            onClick={() => {
+                              changeYear(year);
+                              changeMonth(index);
+                              setHeaderView("days");
+                            }}
+                            className={`month-grid-item ${year === currentYear && index === date.getMonth() ? "is-selected" : ""
+                              }`}
+                          >
+                            {name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="calendar-header w-full">
+                    <button type="button" onClick={decreaseMonth} disabled={prevMonthButtonDisabled} className="calendar-arrow">
+                      &#10094;
+                    </button>
+
+                    <button
+                      type="button"
+                      className="calendar-title calendar-title-btn"
+                      onClick={() => {
+                        setYearGridStart(Math.floor(currentYear / 10) * 10);
+                        setHeaderView("years");
+                      }}
+                    >
+                      {format(date, "MMMM yyyy")}
+                    </button>
+
+                    <button type="button" onClick={increaseMonth} disabled={nextMonthButtonDisabled} className="calendar-arrow">
+                      &#10095;
+                    </button>
+                  </div>
+                );
+              }}
             />
 
             <div className="mt-3 flex gap-3 border-t border-gray-200 pt-3 dark:border-gray-700">
