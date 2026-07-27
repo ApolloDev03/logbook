@@ -147,7 +147,7 @@ export default function Header() {
       const res = await axios.post(
         `${apiUrl}/auth/unread_log_count`,
         {
-          customer_id: authUser?.role_id === 3 ? authUser?.customer?.customer_id || "" : "",
+          company_id: authUser?.role_id === 3 ? authUser?.company_id || "" : "",
         },
         {
           headers: getAuthHeaders(),
@@ -172,7 +172,7 @@ export default function Header() {
         {
           page: "1",
           limit: "10",
-          customer_id: authUser?.role_id === 3 ? authUser?.customer?.customer_id || "" : "",
+          company_id: authUser?.role_id === 3 ? authUser?.company_id || "" : "",
         },
         {
           headers: getAuthHeaders(),
@@ -194,12 +194,12 @@ export default function Header() {
     if (!notifications.length) return;
 
     try {
-      const logIds = notifications.map((item) => item.log_id);
+      const logIds = notifications.map((item) => item.notification_id);
 
       const response = await axios.post(
         `${apiUrl}/auth/mark_log_as_read`,
         {
-          log_id: logIds,
+          notification_id: logIds,
         },
         {
           headers: getAuthHeaders(),
@@ -481,18 +481,22 @@ export default function Header() {
 
                             <span className="block min-w-0 text-start">
                               <span className="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400">
-                                <span className="font-medium text-gray-800 dark:text-white/90">
+                                {/* <span className="font-medium text-gray-800 dark:text-white/90">
                                   {item.created_by_name}
                                 </span>{" "}
                                 {item.notification_title}{" "}
                                 <span className="font-medium text-gray-800 dark:text-white/90">
                                   {item.notification_message}
+                                </span> */}
+                                <span className="font-medium text-gray-800 dark:text-white/90">
+                                  {item.description}
                                 </span>
                               </span>
 
                               <span className="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                                <span>{item.notification_type}</span>
-                                <span className="h-1 w-1 rounded-full bg-gray-400" />
+                                {/* <span>{item.notification_type}</span> */}
+                                {/* <span>{item.type}</span> */}
+                                {/* <span className="h-1 w-1 rounded-full bg-gray-400" /> */}
                                 <span>{item.time_ago}</span>
                               </span>
                             </span>
