@@ -39,6 +39,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "./styles/datepicker.css";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import NotificationList from "./pages/NotificationList";
 
 function getStoredUser() {
   try {
@@ -332,6 +333,16 @@ function AppRoutes() {
             </LayoutRoute>
           }
         />
+
+          <Route
+          path="/notification-list"
+          element={
+            <LayoutRoute>
+              <NotificationList />
+            </LayoutRoute>
+          }
+        />
+
         <Route path="/building-logs" element={<BuildingLogs />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
