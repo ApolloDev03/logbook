@@ -64,8 +64,8 @@ export default function NotificationList() {
     const getCompanyId = () => {
         if (roleId === 3) {
             return String(
-                authUser?.customer?.customer_id ||
                 authUser?.company_id ||
+                authUser?.customer?.customer_id ||
                 authUser?.customer_id ||
                 ""
             );
