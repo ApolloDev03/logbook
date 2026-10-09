@@ -40,6 +40,7 @@ import "./styles/datepicker.css";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotificationList from "./pages/NotificationList";
+import CompanyLogReport from "./pages/CompanyLogReport";
 
 function getStoredUser() {
   try {
@@ -143,6 +144,8 @@ function AppRoutes() {
 
         <Route path="/404" element={<NotFound />} />
         <Route path="/engineer-scan" element={<EngineerScan />} />
+
+        
        
         {/* Dashboard routes with sidebar layout */}
         <Route
@@ -340,6 +343,15 @@ function AppRoutes() {
             <LayoutRoute>
               <NotificationList />
             </LayoutRoute>
+          }
+        />
+
+        <Route
+        path="/company-log-report"
+        element={
+          <LayoutRoute>
+          <CompanyLogReport />
+          </LayoutRoute>
           }
         />
 

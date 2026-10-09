@@ -1,0 +1,1713 @@
+import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import Breadcrumb from "../components/ui/Breadcrumb";
+import PopupModal from "../components/ui/PopupModal";
+import { format } from "date-fns";
+import { apiUrl } from "../config";
+
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
+const EyeIcon = () => (
+  <svg
+    className="h-5 w-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+    />
+  </svg>
+);
+
+const DownloadIcon = () => (
+  <svg
+    className="h-5 w-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"
+    />
+  </svg>
+);
+
+const PrintIcon = () => (
+  <svg
+    className="h-5 w-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M6 9V4h12v5M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v6H6v-6z"
+    />
+  </svg>
+);
+
+const MailIcon = () => (
+  <svg
+    className="h-5 w-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 8L12 13L21 8M5 19H19C20.1 19 21 18.1 21 17V7C21 5.9 20.1 5 19 5H5C3.9 5 3 5.9 3 7V17C3 18.1 3.9 19 5 19Z"
+    />
+  </svg>
+);
+
+const SelectArrow = () => (
+  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+    >
+      <path
+        d="M4.79 7.4L10 12.6L15.21 7.4"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  </span>
+);
+
+const CalendarIcon = () => (
+  <svg
+    className="h-5 w-5 text-gray-500 dark:text-gray-400"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8 7V3m8 4V3M5 11h14M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"
+    />
+  </svg>
+);
+
+const getToken = () => localStorage.getItem("auth_token") || "";
+
+const getAuthHeaders = () => {
+  const token = getToken();
+
+  return {
+    Authorization: token,
+    token: token,
+    "x-access-token": token,
+    "Content-Type": "application/json",
+  };
+};
+
+const getAuthUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem("auth_user") || "{}");
+  } catch (error) {
+    return {};
+  }
+};
+
+const formatDate = (dateValue) => {
+  if (!dateValue) return "-";
+
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return format(date, "dd-MM-yyyy");
+};
+
+const formatOnlyTime = (dateValue) => {
+  if (!dateValue) return "-";
+
+  const timePart = String(dateValue).split(" ")[1];
+
+  if (!timePart) return "-";
+
+  const [hourValue, minuteValue] = timePart.split(":");
+
+  let hour = Number(hourValue);
+  const minute = String(minuteValue || "00").padStart(2, "0");
+
+  if (Number.isNaN(hour)) return "-";
+
+  const ampm = hour >= 12 ? "PM" : "AM";
+
+  hour = hour % 12;
+  hour = hour || 12;
+
+  return `${String(hour).padStart(2, "0")}:${minute} ${ampm}`;
+};
+
+export default function CompanyLogReport() {
+  const [searchParams] = useSearchParams();
+
+  const reportCustomerId = searchParams.get("customer_id") || "";
+  const companyName = searchParams.get("company_name") || "";
+
+  const [logs, setLogs] = useState([]);
+  const [buildingList, setBuildingList] = useState([]);
+  const [buildingLoading, setBuildingLoading] = useState(false);
+
+  const [filters, setFilters] = useState({
+    search: "",
+    customerId: "",
+    buildingId: "",
+    fromDate: "",
+    toDate: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [viewLoading, setViewLoading] = useState(false);
+  const [printLoadingId, setPrintLoadingId] = useState(null);
+  const [downloadLoadingId, setDownloadLoadingId] = useState(null);
+
+  const [mailModalOpen, setMailModalOpen] = useState(false);
+  const [mailLogId, setMailLogId] = useState(null);
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [mailSending, setMailSending] = useState(false);
+
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedLog, setSelectedLog] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [sortConfig, setSortConfig] = useState({
+    key: "log_id",
+    direction: "desc",
+  });
+
+  const authUser = getAuthUser();
+
+  const roleId = Number(authUser?.role_id ?? authUser?.customer?.role_id);
+
+  const logManagementPermission = (authUser?.permissions || []).find((item) => {
+    const permissionName = String(item?.permission_name || "")
+      .trim()
+      .toLowerCase();
+
+    return (
+      Number(item?.permission_id) === 7 || permissionName === "log management"
+    );
+  });
+
+  const isFullActionRole = roleId === 1 || roleId === 3;
+
+  const canWriteLog =
+    isFullActionRole || Number(logManagementPermission?.write || 0) === 1;
+
+  useEffect(() => {
+    if (viewModalOpen || mailModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [viewModalOpen, mailModalOpen]);
+
+  const getBuildingList = async (customerId = "") => {
+    try {
+      setBuildingLoading(true);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/get_buildings_by_customer`,
+        {
+          customer_id: customerId || "",
+        },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (response?.data?.success) {
+        setBuildingList(response?.data?.data || []);
+      } else {
+        setBuildingList([]);
+      }
+    } catch (error) {
+      setBuildingList([]);
+    } finally {
+      setBuildingLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getLogList(1);
+    getBuildingList(reportCustomerId);
+  }, []);
+
+  const getLogList = async (
+    pageNumber = 1,
+    customLimit = limit,
+    customFilters = filters
+  ) => {
+    try {
+      if (!getToken()) {
+        toast.error("Token not found. Please login again.");
+        return;
+      }
+
+      setLoading(true);
+
+      const payload = {
+        page: pageNumber,
+        limit: customLimit,
+        search: customFilters.search || "",
+        building_id: customFilters.buildingId || "",
+        created_by_id:
+          authUser?.role_id === 1 || authUser?.role_id === 3
+            ? null
+            : authUser?.id,
+        customer_id: reportCustomerId,
+        start_date: customFilters.fromDate || "",
+        end_date: customFilters.toDate || "",
+      };
+
+      const response = await axios.post(`${apiUrl}/auth/log_list`, payload, {
+        headers: getAuthHeaders(),
+      });
+
+      if (response?.data?.success) {
+        const apiLogs = response?.data?.data || [];
+
+        setLogs(sortLogs(apiLogs, sortConfig.key, sortConfig.direction));
+        setPage(response?.data?.page || pageNumber);
+        setTotal(response?.data?.total || apiLogs.length || 0);
+        setTotalPages(response?.data?.total_pages || 1);
+      } else {
+        setLogs([]);
+        setTotal(0);
+        setTotalPages(1);
+        toast.error(response?.data?.message || "Logs not found.");
+      }
+    } catch (error) {
+      setLogs([]);
+      toast.error(
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          "Failed to load logs."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getLogById = async (logId) => {
+    try {
+      if (!getToken()) {
+        toast.error("Token not found. Please login again.");
+        return;
+      }
+
+      setSelectedLog(null);
+      setViewModalOpen(true);
+      setViewLoading(true);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/get_log_by_id`,
+        {
+          log_id: String(logId),
+        },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (response?.data?.success) {
+        setSelectedLog(response?.data?.data || null);
+      } else {
+        toast.error(response?.data?.message || "Log details not found.");
+        closeViewModal();
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          "Failed to load log details."
+      );
+      closeViewModal();
+    } finally {
+      setViewLoading(false);
+    }
+  };
+
+  const printLog = async (logId) => {
+    try {
+      if (!getToken()) {
+        toast.error("Token not found. Please login again.");
+        return;
+      }
+
+      setPrintLoadingId(logId);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/print_log`,
+        {
+          log_id: String(logId),
+        },
+        {
+          headers: getAuthHeaders(),
+          responseType: "text",
+        }
+      );
+
+      const printWindow = window.open("", "_blank");
+
+      if (!printWindow) {
+        toast.error("Please allow popup to print log.");
+        return;
+      }
+
+      printWindow.document.open();
+      printWindow.document.write(response.data);
+      printWindow.document.close();
+
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+      }, 500);
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          "Failed to print log."
+      );
+    } finally {
+      setPrintLoadingId(null);
+    }
+  };
+
+  const downloadExcelRecord = async (log) => {
+    try {
+      if (!log?.log_id) {
+        toast.error("Log ID not found.");
+        return;
+      }
+
+      if (!getToken()) {
+        toast.error("Token not found. Please login again.");
+        return;
+      }
+
+      setDownloadLoadingId(log.log_id);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/export_log`,
+        {
+          log_id: String(log.log_id),
+        },
+        {
+          headers: getAuthHeaders(),
+          responseType: "blob",
+        }
+      );
+
+      const contentType = response.headers["content-type"];
+
+      if (contentType && contentType.includes("application/json")) {
+        const text = await response.data.text();
+        const json = JSON.parse(text);
+
+        toast.error(json?.message || "Export failed.");
+        return;
+      }
+
+      const blob = new Blob([response.data], {
+        type:
+          response.headers["content-type"] ||
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `maintenance-log-${log.log_id}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Excel downloaded successfully.");
+    } catch (error) {
+      let message = "Failed to download Excel.";
+
+      if (error?.response?.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const json = JSON.parse(text);
+          message = json?.message || message;
+        } catch {}
+      } else {
+        message =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          message;
+      }
+
+      toast.error(message);
+    } finally {
+      setDownloadLoadingId(null);
+    }
+  };
+
+  const closeViewModal = () => {
+    setSelectedLog(null);
+    setViewModalOpen(false);
+  };
+
+  const updateFilter = (key, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+
+    setPage(1);
+  };
+
+  const clearDateRange = () => {
+    setFilters((prev) => ({
+      ...prev,
+      fromDate: "",
+      toDate: "",
+    }));
+
+    setPage(1);
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > totalPages || newPage === page) return;
+    getLogList(newPage);
+  };
+
+  const getVisiblePages = () => {
+    const visibleCount = 5;
+
+    if (totalPages <= visibleCount) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const maxStartPage = totalPages - visibleCount + 1;
+    const startPage = Math.min(page, maxStartPage);
+
+    return Array.from(
+      { length: visibleCount },
+      (_, index) => startPage + index
+    );
+  };
+
+  const formatLogIdWithPrefix = (log) => {
+    if (!log?.company_unique_log_id) return "-";
+
+    const prefix =
+      log?.customer_prefix ||
+      log?.prefix ||
+      log?.log_prefix ||
+      log?.company_prefix ||
+      "";
+
+    const id = String(log.company_unique_log_id).padStart(4, "0");
+
+    return prefix ? `${prefix}-${id}` : id;
+  };
+
+  const getSortValue = (log, key) => {
+    if (key === "log_id") return Number(log?.log_id) || 0;
+    if (key === "maintenance_type_name")
+      return log?.maintenance_type_name || "";
+    if (key === "customer_company_name")
+      return log?.customer_company_name || "";
+    if (key === "building_name") return log?.building_name || "";
+    if (key === "postcode") return log?.postcode || "";
+    if (key === "created_by_name") return log?.created_by_name || "";
+    if (key === "inspection_date") {
+      return new Date(log?.start_time || log?.created_at || "").getTime() || 0;
+    }
+
+    return log?.[key] || "";
+  };
+
+  const sortLogs = (data, key, direction) => {
+    return [...data].sort((a, b) => {
+      const aValue = getSortValue(a, key);
+      const bValue = getSortValue(b, key);
+
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return direction === "asc" ? aValue - bValue : bValue - aValue;
+      }
+
+      return direction === "asc"
+        ? String(aValue).localeCompare(String(bValue))
+        : String(bValue).localeCompare(String(aValue));
+    });
+  };
+
+  const handleSort = (key) => {
+    const direction =
+      sortConfig.key === key && sortConfig.direction === "asc" ? "desc" : "asc";
+
+    setSortConfig({ key, direction });
+    setLogs((prev) => sortLogs(prev, key, direction));
+  };
+
+  const resetFilters = () => {
+    const emptyFilters = {
+      search: "",
+      customerId: "",
+      buildingId: "",
+      fromDate: "",
+      toDate: "",
+    };
+
+    setFilters(emptyFilters);
+    setPage(1);
+
+    getBuildingList(reportCustomerId);
+    getLogList(1, limit, emptyFilters);
+  };
+
+  const exportLogs = async () => {
+    try {
+      const response = await axios.post(
+        `${apiUrl}/auth/export_log`,
+        {
+          search: filters.search || "",
+          building_id: filters.buildingId || "",
+          customer_id: reportCustomerId,
+          start_date: filters.fromDate || "",
+          end_date: filters.toDate || "",
+          postcode: "",
+          address: "",
+          address_line_2: "",
+        },
+        {
+          headers: getAuthHeaders(),
+          responseType: "blob",
+        }
+      );
+
+      const blob = new Blob([response.data], {
+        type: response.headers["content-type"] || "text/csv",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `company-logs-report.csv`;
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Logs exported successfully.");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to export logs.");
+    }
+  };
+
+  const openMailModal = (logId) => {
+    setMailLogId(logId);
+    setRecipientEmail("");
+    setMailModalOpen(true);
+  };
+
+  const closeMailModal = () => {
+    if (mailSending) return;
+
+    setMailModalOpen(false);
+    setMailLogId(null);
+    setRecipientEmail("");
+  };
+
+  const isValidEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const sendLogPdfMail = async () => {
+    if (!mailLogId) {
+      toast.error("Log ID not found.");
+      return;
+    }
+
+    const emails = recipientEmail
+      .split(",")
+      .map((email) => email.trim())
+      .filter(Boolean);
+
+    if (emails.length === 0) {
+      toast.error("Please enter email address.");
+      return;
+    }
+
+    const invalidEmails = emails.filter((email) => !isValidEmail(email));
+
+    if (invalidEmails.length > 0) {
+      toast.error(`Invalid email: ${invalidEmails[0]}`);
+      return;
+    }
+
+    try {
+      if (!getToken()) {
+        toast.error("Token not found. Please login again.");
+        return;
+      }
+
+      setMailSending(true);
+
+      const response = await axios.post(
+        `${apiUrl}/auth/pdfsendmail`,
+        {
+          log_id: Number(mailLogId),
+          recipient_email: emails.join(","),
+        },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (response?.data?.success) {
+        toast.success(
+          response?.data?.message || "Log PDF sent successfully via email"
+        );
+
+        setMailModalOpen(false);
+        setMailLogId(null);
+        setRecipientEmail("");
+      } else {
+        toast.error(response?.data?.message || "Failed to send log PDF.");
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          "Failed to send log PDF."
+      );
+    } finally {
+      setMailSending(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Company Log Report
+        </h1>
+
+        <Breadcrumb
+          pageName={companyName || "Company Log Report"}
+          parentPage="Customer Management"
+        />
+      </div>
+
+      <div className="card overflow-visible rounded-xl">
+        <div className="m-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+            <input
+              type="text"
+              placeholder="Search List In Postcode,Address..."
+              className="form-input"
+              value={filters.search}
+              onChange={(e) => updateFilter("search", e.target.value)}
+            />
+
+            <div className="relative">
+              <select
+                className="form-select"
+                value={filters.buildingId}
+                onChange={(e) => updateFilter("buildingId", e.target.value)}
+                disabled={buildingLoading}
+              >
+                <option value="">All Buildings</option>
+
+                {buildingList.map((building) => (
+                  <option
+                    key={building.building_id}
+                    value={building.building_id}
+                  >
+                    {building.building_name}
+                  </option>
+                ))}
+              </select>
+
+              <SelectArrow />
+            </div>
+
+            <UniqueDateRangePicker
+              value={{
+                fromDate: filters.fromDate,
+                toDate: filters.toDate,
+              }}
+              onChange={({ fromDate, toDate }) => {
+                setFilters((prev) => ({
+                  ...prev,
+                  fromDate,
+                  toDate,
+                }));
+
+                setPage(1);
+              }}
+              onClear={clearDateRange}
+            />
+          </div>
+
+          <div className="flex justify-end gap-4 pt-4">
+            <button
+              type="button"
+              onClick={() => getLogList(1)}
+              className="btn-primary disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              Search
+            </button>
+
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            >
+              Clear
+            </button>
+
+            <button
+              type="button"
+              onClick={exportLogs}
+              className="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+            >
+              Export
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full border border-gray-200 text-left text-sm dark:border-gray-800">
+            <thead>
+              <tr
+                onClick={() => handleSort("log_id")}
+                className="border-b border-gray-100 dark:border-gray-800"
+              >
+                <th className="table-th whitespace-nowrap">
+                  Inspection Date
+                </th>
+
+                <th className="table-th whitespace-nowrap">
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 font-semibold"
+                  >
+                    Log ID
+                  </button>
+                </th>
+
+                {(authUser.role_id === 1 ||
+                  authUser.customer?.customer_id === null) && (
+                  <th className="table-th whitespace-nowrap">Company Name</th>
+                )}
+
+                <th className="table-th whitespace-nowrap">
+                  System & Purpose
+                </th>
+
+                <th className="table-th whitespace-nowrap">Building</th>
+                <th className="table-th whitespace-nowrap">Postcode</th>
+                <th className="table-th whitespace-nowrap">Engineer</th>
+                <th className="table-th whitespace-nowrap">Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan="8"
+                    className="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400"
+                  >
+                    Loading logs...
+                  </td>
+                </tr>
+              ) : logs.length > 0 ? (
+                logs.map((log) => (
+                  <tr key={log.log_id} className="table-row">
+                    <td className="table-td whitespace-nowrap">
+                      {formatDate(log.entry_date)}
+                    </td>
+
+                    <td
+                      onClick={() => getLogById(log.log_id)}
+                      className="cursor-pointer whitespace-nowrap px-6 py-4 text-sm font-medium text-blue-600"
+                    >
+                      {formatLogIdWithPrefix(log)}
+                    </td>
+
+                    {(authUser.role_id === 1 ||
+                      authUser.customer?.customer_id === null) && (
+                      <td className="table-td whitespace-nowrap">
+                        {log.customer_company_name || "-"}
+                      </td>
+                    )}
+
+                    <td className="table-td whitespace-nowrap">
+                      {log?.maintenance_entries?.map((entry, index) => (
+                        <div key={index}>
+                          <span>{entry?.component_name}</span>
+                          {" - "}
+                          <span>{entry?.maintenance_cycle_name}</span>
+                        </div>
+                      ))}
+                    </td>
+
+                    <td className="table-td whitespace-nowrap">
+                      {log.building_name || "-"}
+                    </td>
+
+                    <td className="table-td whitespace-nowrap">
+                      {log.postcode || "-"}
+                    </td>
+
+                    <td className="table-td whitespace-nowrap">
+                      {log.created_by_name || "-"}
+                    </td>
+
+                    <td className="table-td whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          title="View"
+                          onClick={() => getLogById(log.log_id)}
+                          className="text-green-500 hover:text-green-700"
+                        >
+                          <EyeIcon />
+                        </button>
+
+                        {canWriteLog && (
+                          <>
+                            <button
+                              type="button"
+                              title="Print"
+                              disabled={printLoadingId === log.log_id}
+                              onClick={() => printLog(log.log_id)}
+                              className="text-purple-500 hover:text-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <PrintIcon />
+                            </button>
+
+                            <button
+                              type="button"
+                              title="Send PDF Mail"
+                              onClick={() => openMailModal(log.log_id)}
+                              className="text-blue-500 hover:text-blue-700"
+                            >
+                              <MailIcon />
+                            </button>
+
+                            {/* <button
+                              type="button"
+                              title="Download Excel"
+                              disabled={downloadLoadingId === log.log_id}
+                              onClick={() => downloadExcelRecord(log)}
+                              className="text-blue-500 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <DownloadIcon />
+                            </button> */}
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="8"
+                    className="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400"
+                  >
+                    No logs found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-gray-100 px-4 py-4 text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Show
+            </span>
+
+            <select
+              value={limit}
+              onChange={(e) => {
+                const newLimit = Number(e.target.value);
+
+                setLimit(newLimit);
+                setPage(1);
+
+                getLogList(1, newLimit);
+              }}
+              className="rounded-lg border border-gray-300 px-2 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={200}>200</option>
+              <option value={500}>500</option>
+            </select>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={page <= 1 || loading}
+              onClick={() => handlePageChange(1)}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              First
+            </button>
+
+            <button
+              type="button"
+              disabled={page <= 1 || loading}
+              onClick={() => handlePageChange(page - 1)}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Previous
+            </button>
+
+            {getVisiblePages().map((pageNumber) => (
+              <button
+                key={pageNumber}
+                type="button"
+                disabled={loading}
+                onClick={() => handlePageChange(pageNumber)}
+                className={`min-w-[40px] rounded-lg border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                  pageNumber === page
+                    ? "border-blue-600 bg-blue-600 text-white"
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+                }`}
+              >
+                {pageNumber}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              disabled={page >= totalPages || loading}
+              onClick={() => handlePageChange(page + 1)}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Next
+            </button>
+
+            <button
+              type="button"
+              disabled={page >= totalPages || loading}
+              onClick={() => handlePageChange(totalPages)}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Last
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <PopupModal
+        open={viewModalOpen}
+        onClose={closeViewModal}
+        maxWidth="max-w-[900px]"
+        className="px-3 py-4 sm:px-4 sm:py-6"
+        bodyClassName="max-h-[92vh] p-5 sm:p-8"
+      >
+        <button
+          type="button"
+          onClick={closeViewModal}
+          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl leading-none text-gray-400 transition hover:bg-gray-200 hover:text-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
+        >
+          ×
+        </button>
+
+        <div className="mb-6 pr-12">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+            View Log Details
+          </h2>
+
+          <div className="mt-1 flex justify-between text-sm text-gray-500 dark:text-gray-400">
+            <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {selectedLog?.log_id ? (
+                <>
+                  <span className="font-semibold">LOG ID :</span>{" "}
+                  {formatLogIdWithPrefix(selectedLog)}
+                </>
+              ) : (
+                "Loading log information"
+              )}
+            </span>
+
+            <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {selectedLog?.entry_date ? (
+                <>
+                  <span className="font-semibold">Create Date :</span>{" "}
+                  {formatDate(selectedLog?.entry_date)}
+                </>
+              ) : (
+                "Loading log information"
+              )}
+            </span>
+
+            <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {selectedLog?.entry_on_place !== undefined &&
+              selectedLog?.entry_on_place !== null ? (
+                <>
+                  <span className="font-semibold">Generate Via:</span>{" "}
+                  {Number(selectedLog.entry_on_place) === 0
+                    ? "Manual"
+                    : Number(selectedLog.entry_on_place) === 1
+                    ? "Scanner"
+                    : Number(selectedLog.entry_on_place) === 2
+                    ? "Mobile Manual"
+                    : ""}
+                </>
+              ) : null}
+            </span>
+          </div>
+        </div>
+
+        {viewLoading ? (
+          <div className="py-10 text-center text-gray-500 dark:text-gray-400">
+            Loading log details...
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6">
+              <h3 className="mb-5 text-base font-semibold text-gray-900 dark:text-white">
+                Customer & Building Information
+              </h3>
+
+              <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
+                {roleId !== 3 && (
+                  <Info
+                    label="Company Name"
+                    value={selectedLog?.customer_company_name}
+                  />
+                )}
+
+                <Info
+                  label="Building Name"
+                  value={selectedLog?.building_name}
+                />
+                <Info label="UPRN" value={selectedLog?.uprn_no} />
+                <Info label="Address Line 1" value={selectedLog?.address} />
+                <Info
+                  label="Address Line 2"
+                  value={selectedLog?.address_line_2}
+                />
+                <Info label="Country" value={selectedLog?.country_name} />
+
+                {!["uk", "united kingdom"].includes(
+                  selectedLog?.country_name?.toLowerCase()
+                ) && (
+                  <Info label="State" value={selectedLog?.state_name} />
+                )}
+
+                <Info label="City" value={selectedLog?.city_name} />
+                <Info label="Postcode" value={selectedLog?.postcode} />
+                <Info
+                  label="Access Information"
+                  value={selectedLog?.landmark}
+                />
+              </div>
+            </div>
+
+            {selectedLog?.maintenance_entries?.length > 0 ? (
+              selectedLog.maintenance_entries.map((entry, index) => (
+                <div
+                  key={index}
+                  className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6"
+                >
+                  <h3 className="mb-5 text-base font-semibold text-gray-900 dark:text-white">
+                    {entry?.component_name}
+                  </h3>
+
+                  <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
+                    <Info
+                      label="Purpose of Visit"
+                      value={entry?.maintenance_cycle_name}
+                    />
+                    <Info label="Date" value={formatDate(entry?.entry_date)} />
+                    <Info
+                      label="Start Time"
+                      value={`${formatOnlyTime(entry?.start_time)} `}
+                    />
+                    <Info
+                      label="End Time"
+                      value={`${formatOnlyTime(entry?.finish_time)} `}
+                    />
+                    <Info
+                      label="Remidial Action Taken"
+                      value={entry?.remark || "-"}
+                    />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-2xl border border-gray-200 p-4 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                No maintenance entries found
+              </div>
+            )}
+
+            <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6">
+              <h3 className="mb-5 text-base font-semibold text-gray-900 dark:text-white">
+                Engineer Information
+              </h3>
+
+              <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 md:grid-cols-3">
+                <Info
+                  label="Engineer Name"
+                  value={selectedLog?.created_by_name}
+                />
+                <Info
+                  label="Engineer Email"
+                  value={selectedLog?.created_by_email}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </PopupModal>
+
+      <PopupModal
+        open={mailModalOpen}
+        onClose={closeMailModal}
+        maxWidth="max-w-[520px]"
+        className="px-3 py-4 sm:px-4 sm:py-6"
+        bodyClassName="p-5 sm:p-7"
+      >
+        <button
+          type="button"
+          onClick={closeMailModal}
+          disabled={mailSending}
+          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl leading-none text-gray-400 transition hover:bg-gray-200 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-gray-800 dark:hover:bg-gray-700"
+        >
+          ×
+        </button>
+
+        <div className="pr-10">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            Send Log PDF
+          </h2>
+
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            Enter one email or multiple emails separated by comma.
+          </p>
+        </div>
+
+        <div className="mt-6">
+          <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Recipient Email
+          </label>
+
+          <textarea
+            value={recipientEmail}
+            onChange={(e) => setRecipientEmail(e.target.value)}
+            rows={4}
+            placeholder="example@gmail.com, another@gmail.com"
+            className="w-full rounded-lg border border-gray-300 px-3 py-3 text-sm text-gray-800 shadow-sm focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          />
+
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            Example: abc@gmail.com, test12@gmail.com
+          </p>
+        </div>
+
+        <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={closeMailModal}
+            disabled={mailSending}
+            className="rounded-lg border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+          >
+            Close
+          </button>
+
+          <button
+            type="button"
+            onClick={sendLogPdfMail}
+            disabled={mailSending}
+            className="btn-primary rounded-lg px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {mailSending ? "Sending..." : "Send Mail"}
+          </button>
+        </div>
+      </PopupModal>
+    </>
+  );
+}
+
+function UniqueDateRangePicker({ value, onChange, onClear }) {
+  const [open, setOpen] = useState(false);
+  const pickerRef = useRef(null);
+
+  const [headerView, setHeaderView] = useState("days");
+  const [yearGridStart, setYearGridStart] = useState(null);
+  const [monthGridYear, setMonthGridYear] = useState(null);
+
+  const parseLocalDate = (dateValue) => {
+    if (!dateValue) return null;
+
+    const [yyyy, mm, dd] = dateValue.split("-").map(Number);
+    return new Date(yyyy, mm - 1, dd);
+  };
+
+  const startDate = parseLocalDate(value.fromDate);
+  const endDate = parseLocalDate(value.toDate);
+
+  const displayDate =
+    value.fromDate && value.toDate
+      ? `${format(startDate, "MMM dd, yyyy")} - ${format(
+          endDate,
+          "MMM dd, yyyy"
+        )}`
+      : "Select Date Range";
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (pickerRef.current && !pickerRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleDateChange = (dates) => {
+    const [start, end] = dates;
+
+    onChange({
+      fromDate: start ? format(start, "yyyy-MM-dd") : "",
+      toDate: end ? format(end, "yyyy-MM-dd") : "",
+    });
+
+    if (start && end) {
+      setOpen(false);
+    }
+  };
+
+  return (
+    <>
+      <style>
+        {`
+          .react-datepicker {
+            border: none;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+            font-family: inherit;
+          }
+
+          .react-datepicker__header {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 15px 18px;
+          }
+
+          .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+
+          .calendar-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+          }
+
+          .calendar-arrow {
+            width: 34px;
+            height: 34px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 22px;
+          }
+
+          .calendar-arrow:hover {
+            background: #f3f4f6;
+          }
+
+          .react-datepicker__navigation {
+            display: none;
+          }
+
+          .react-datepicker__current-month {
+            display: none;
+          }
+
+          .react-datepicker__day-name {
+            width: 2.6rem;
+            line-height: 2.6rem;
+            font-weight: 600;
+            color: #6b7280;
+          }
+
+          .react-datepicker__day {
+            width: 2.6rem;
+            line-height: 2.6rem;
+            margin: 2px;
+            border-radius: 8px;
+          }
+
+          .react-datepicker__day:hover {
+            background: #f3f4f6;
+          }
+
+          .react-datepicker__day--selected,
+          .react-datepicker__day--in-selecting-range,
+          .react-datepicker__day--in-range,
+          .react-datepicker__day--range-start,
+          .react-datepicker__day--range-end,
+          .react-datepicker__day--keyboard-selected {
+            background: #2563eb !important;
+            color: #fff !important;
+          }
+
+          .react-datepicker__header:not(.react-datepicker__header--has-time-select, .react-datepicker__header--middle, .react-datepicker__header--bottom) {
+            border-top-right-radius: 0.3rem;
+            width: 335PX;
+          }
+
+          .react-datepicker__day--outside-month {
+            color: #cbd5e1;
+          }
+
+          .calendar-title-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+          }
+
+          .year-grid,
+          .month-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 18px;
+          }
+
+          .year-grid-item,
+          .month-grid-item {
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            padding: 10px 0;
+            font-size: 14px;
+            font-weight: 500;
+            color: #111827;
+            cursor: pointer;
+          }
+
+          .year-grid-item:hover,
+          .month-grid-item:hover {
+            background: #f3f4f6;
+          }
+
+          .year-grid-item.is-outside {
+            color: #cbd5e1;
+          }
+
+          .year-grid-item.is-selected,
+          .month-grid-item.is-selected {
+            background: #2563eb;
+            color: #fff;
+          }
+
+          .hide-day-grid .react-datepicker__day-names,
+          .hide-day-grid .react-datepicker__month {
+            display: none;
+          }
+        `}
+      </style>
+
+      <div className="relative" ref={pickerRef}>
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          className="form-input flex w-full items-center justify-between text-left"
+        >
+          <span
+            className={
+              value.fromDate && value.toDate
+                ? "truncate text-gray-900 dark:text-white"
+                : "truncate text-gray-400"
+            }
+          >
+            {displayDate}
+          </span>
+
+          <CalendarIcon />
+        </button>
+
+        {open && (
+          <div
+            className={`absolute left-1/2 top-full z-[9999] mt-3 w-[calc(100vw-32px)] max-w-[360px] -translate-x-1/2 rounded-2xl bg-white p-3 shadow-2xl dark:bg-gray-900 sm:left-0 sm:w-[380px] sm:translate-x-0 md:left-auto md:right-0 md:translate-x-0 ${
+              headerView !== "days" ? "hide-day-grid" : ""
+            }`}
+          >
+            <DatePicker
+              selected={startDate}
+              onChange={handleDateChange}
+              onCalendarClose={() => setHeaderView("days")}
+              startDate={startDate}
+              endDate={endDate}
+              selectsRange
+              inline
+              maxDate={new Date()}
+              renderCustomHeader={({
+                date,
+                changeYear,
+                changeMonth,
+                decreaseMonth,
+                increaseMonth,
+                prevMonthButtonDisabled,
+                nextMonthButtonDisabled,
+              }) => {
+                const currentYear = date.getFullYear();
+
+                if (headerView === "years") {
+                  const start =
+                    yearGridStart ?? Math.floor(currentYear / 10) * 10;
+                  const years = Array.from(
+                    { length: 12 },
+                    (_, i) => start - 1 + i
+                  );
+
+                  return (
+                    <div className="flex flex-col">
+                      <div className="calendar-header">
+                        <button
+                          type="button"
+                          className="calendar-arrow"
+                          onClick={() => setYearGridStart(start - 10)}
+                        >
+                          &#10094;
+                        </button>
+
+                        <span className="calendar-title">
+                          {start} - {start + 9}
+                        </span>
+
+                        <button
+                          type="button"
+                          className="calendar-arrow"
+                          onClick={() => setYearGridStart(start + 10)}
+                        >
+                          &#10095;
+                        </button>
+                      </div>
+
+                      <div className="year-grid">
+                        {years.map((year) => (
+                          <button
+                            key={year}
+                            type="button"
+                            onClick={() => {
+                              setMonthGridYear(year);
+                              setHeaderView("months");
+                            }}
+                            className={`year-grid-item ${
+                              year === currentYear ? "is-selected" : ""
+                            } ${
+                              year < start || year > start + 9
+                                ? "is-outside"
+                                : ""
+                            }`}
+                          >
+                            {year}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (headerView === "months") {
+                  const year = monthGridYear ?? currentYear;
+                  const monthNames = [
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun",
+                    "Jul",
+                    "Aug",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Dec",
+                  ];
+
+                  return (
+                    <div className="flex flex-col">
+                      <div className="calendar-header">
+                        <button
+                          type="button"
+                          className="calendar-arrow"
+                          onClick={() => setMonthGridYear(year - 1)}
+                        >
+                          &#10094;
+                        </button>
+
+                        <span className="calendar-title">{year}</span>
+
+                        <button
+                          type="button"
+                          className="calendar-arrow"
+                          onClick={() => setMonthGridYear(year + 1)}
+                        >
+                          &#10095;
+                        </button>
+                      </div>
+
+                      <div className="month-grid">
+                        {monthNames.map((name, index) => (
+                          <button
+                            key={name}
+                            type="button"
+                            onClick={() => {
+                              changeYear(year);
+                              changeMonth(index);
+                              setHeaderView("days");
+                            }}
+                            className={`month-grid-item ${
+                              year === currentYear && index === date.getMonth()
+                                ? "is-selected"
+                                : ""
+                            }`}
+                          >
+                            {name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="calendar-header w-full">
+                    <button
+                      type="button"
+                      onClick={decreaseMonth}
+                      disabled={prevMonthButtonDisabled}
+                      className="calendar-arrow"
+                    >
+                      &#10094;
+                    </button>
+
+                    <button
+                      type="button"
+                      className="calendar-title calendar-title-btn"
+                      onClick={() => {
+                        setYearGridStart(Math.floor(currentYear / 10) * 10);
+                        setHeaderView("years");
+                      }}
+                    >
+                      {format(date, "MMMM yyyy")}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={increaseMonth}
+                      disabled={nextMonthButtonDisabled}
+                      className="calendar-arrow"
+                    >
+                      &#10095;
+                    </button>
+                  </div>
+                );
+              }}
+            />
+
+            <div className="mt-3 flex gap-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+              <button
+                type="button"
+                onClick={() => {
+                  onClear();
+                  setOpen(false);
+                }}
+                className="w-full rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+              >
+                Clear
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="w-full rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function Info({ label, value }) {
+  return (
+    <div>
+      <p className="mb-2 text-xs font-semibold text-gray-900 dark:text-gray-400">
+        {label}
+      </p>
+      <p className="break-words text-sm text-gray-500 dark:text-white">
+        {value || "-"}
+      </p>
+    </div>
+  );
+}

@@ -8,6 +8,22 @@ import Toggle from "../components/ui/Toggle";
 import PopupModal from "../components/ui/PopupModal";
 import { apiUrl } from "../config";
 
+const PlusIcon = () => (
+  <svg
+    className="h-5 w-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 5v14M5 12h14"
+    />
+  </svg>
+);
+
 const EyeIcon = () => (
   <svg
     className="h-5 w-5"
@@ -141,6 +157,10 @@ const getCustomerPermission = () => {
     isAdmin: false,
   };
 };
+
+
+
+
 export default function Customer() {
   const navigate = useNavigate();
   const [sortOrder, setSortOrder] = useState("asc");
@@ -550,6 +570,15 @@ export default function Customer() {
       setMailLoadingId(null);
     }
   };
+
+  const handleCompanyLogReport = (customer) => {
+    navigate(
+      `/company-log-report?customer_id=${customer.customer_id}&company_name=${encodeURIComponent(
+        customer.customer_company_name || ""
+      )}`
+    );
+  };
+
   return (
     <>
       <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
@@ -688,6 +717,8 @@ export default function Customer() {
 
                     <td className="table-td whitespace-nowrap">
                       <div className="flex items-center gap-3">
+
+
                         <button
                           type="button"
                           title="View"
@@ -733,6 +764,15 @@ export default function Customer() {
                               ) : (
                                 <SendMailIcon />
                               )}
+                            </button>
+
+                            <button
+                              type="button"
+                              title="Company Log Report"
+                              onClick={() => handleCompanyLogReport(customer)}
+                              className="text-orange-500 transition-colors hover:text-orange-700"
+                            >
+                              <PlusIcon />
                             </button>
                           </>
                         )}
