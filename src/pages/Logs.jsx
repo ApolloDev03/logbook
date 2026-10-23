@@ -83,6 +83,22 @@ const MailIcon = () => (
   </svg>
 );
 
+const EditDateIcon = () => (
+  <svg
+    className="h-5 w-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L9 17l-4 1 1-4L16.5 3.5z"
+    />
+  </svg>
+);
+
 const SelectArrow = () => (
   <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
     <svg
@@ -233,7 +249,11 @@ export default function Logs() {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
 
-
+  const [editDateModalOpen, setEditDateModalOpen] = useState(false);
+  const [editDateLogId, setEditDateLogId] = useState(null);
+  const [editEntryDate, setEditEntryDate] = useState(null);
+  const [editDateLoading, setEditDateLoading] = useState(false);
+  const [showEditCalendar, setShowEditCalendar] = useState(false);
 
   // const [showDatePicker, setShowDatePicker] = useState(false);
   // const datePickerRef = useRef(null);
@@ -297,7 +317,7 @@ export default function Logs() {
   // }, []);
 
   useEffect(() => {
-    if (viewModalOpen) {
+    if (viewModalOpen || mailModalOpen || editDateModalOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -306,7 +326,7 @@ export default function Logs() {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [viewModalOpen, mailModalOpen]);
+  }, [viewModalOpen, mailModalOpen, editDateModalOpen]);
 
   const getCustomerDropdown = async () => {
     try {
@@ -900,6 +920,110 @@ export default function Logs() {
     }
   };
 
+  const parseLogEntryDate = (dateValue) => {
+    if (!dateValue) return null;
+
+    const match = String(dateValue).match(/^(\d{4})-(\d{2})-(\d{2})/);
+
+    if (!match) return null;
+
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+
+    return new Date(year, month - 1, day);
+  };
+
+  const openEditDateModal = (log) => {
+    setEditDateLogId(log.log_id);
+    setEditEntryDate(parseLogEntryDate(log.entry_date));
+    setShowEditCalendar(false);
+    setEditDateModalOpen(true);
+  };
+
+  const closeEditDateModal = () => {
+    if (editDateLoading) return;
+
+    setEditDateModalOpen(false);
+    setEditDateLogId(null);
+    setEditEntryDate(null);
+    setShowEditCalendar(false);
+  };
+
+  const handleUpdateLogEntryDate = async () => {
+    if (!editDateLogId) {
+      toast.error("Log ID not found.");
+      return;
+    }
+
+    if (!editEntryDate || Number.isNaN(editEntryDate.getTime())) {
+      toast.error("Please select an entry date.");
+      return;
+    }
+
+    if (!getToken()) {
+      toast.error("Token not found. Please login again.");
+      return;
+    }
+
+    try {
+      setEditDateLoading(true);
+
+      const newEntryDate = format(editEntryDate, "yyyy-MM-dd");
+
+      const response = await axios.post(
+        `${apiUrl}/auth/update_log_entry_date`,
+        {
+          log_id: String(editDateLogId),
+          entry_date: newEntryDate,
+        },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (response?.data?.success) {
+        toast.success(
+          response?.data?.message ||
+          "Entry date updated successfully."
+        );
+
+        setLogs((prev) =>
+          prev.map((log) =>
+            String(log.log_id) === String(editDateLogId)
+              ? {
+                ...log,
+                entry_date: newEntryDate,
+              }
+              : log
+          )
+        );
+
+        setEditDateModalOpen(false);
+        setEditDateLogId(null);
+        setEditEntryDate(null);
+
+        // Refresh current page with existing filters.
+        await getLogList(page, limit, filters);
+      } else {
+        toast.error(
+          response?.data?.message ||
+          "Failed to update entry date."
+        );
+      }
+    } catch (error) {
+      console.error("Update Log Entry Date Error:", error);
+
+      toast.error(
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to update entry date."
+      );
+    } finally {
+      setEditDateLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1137,6 +1261,15 @@ export default function Logs() {
                               <MailIcon />
                             </button>
 
+                            <button
+                              type="button"
+                              title="Edit Date"
+                              onClick={() => openEditDateModal(log)}
+                              className="text-orange-500 transition-colors hover:text-orange-700"
+                            >
+                              <EditDateIcon />
+                            </button>
+
                             {/* <button
                               type="button"
                               title="Download Excel"
@@ -1222,8 +1355,8 @@ export default function Logs() {
                 disabled={loading}
                 onClick={() => handlePageChange(pageNumber)}
                 className={`min-w-[40px] rounded-lg border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${pageNumber === page
-                    ? "border-blue-600 bg-blue-600 text-white"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+                  ? "border-blue-600 bg-blue-600 text-white"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
                   }`}
               >
                 {pageNumber}
@@ -1475,6 +1608,179 @@ export default function Logs() {
             className="rounded-lg btn-primary px-5 py-3 text-sm font-semibold text-white  disabled:cursor-not-allowed disabled:opacity-60"
           >
             {mailSending ? "Sending..." : "Send Mail"}
+          </button>
+        </div>
+      </PopupModal>
+
+      <PopupModal
+        open={editDateModalOpen}
+        onClose={closeEditDateModal}
+        maxWidth="max-w-[480px]"
+        className="px-3 py-4 sm:px-4 sm:py-6"
+        bodyClassName="max-h-[90vh] overflow-y-auto p-5 sm:p-7"
+      >
+        <button
+          type="button"
+          onClick={closeEditDateModal}
+          disabled={editDateLoading}
+          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl leading-none text-gray-400 transition hover:bg-gray-200 hover:text-gray-600 disabled:opacity-50 dark:bg-gray-800 dark:hover:bg-gray-700"
+        >
+          ×
+        </button>
+
+        <div className="pr-10">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            Edit Date
+          </h2>
+
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            Select a new entry date for this log.
+          </p>
+        </div>
+
+        <div className="mt-6">
+          <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Entry Date <span className="text-red-500">*</span>
+          </label>
+
+          {/* Date field */}
+          <button
+            type="button"
+            onClick={() => setShowEditCalendar((prev) => !prev)}
+            disabled={editDateLoading}
+            aria-expanded={showEditCalendar}
+            className="flex h-11 w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-4 text-left text-sm text-gray-800 transition focus:border-blue-500 focus:outline-none disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          >
+            <span>
+              {editEntryDate
+                ? format(editEntryDate, "dd-MM-yyyy")
+                : "Select Entry Date"}
+            </span>
+
+            <CalendarIcon />
+          </button>
+
+          {/* Calendar opens BELOW input, inside modal */}
+          {showEditCalendar && (
+            <div className="mt-3 flex w-full justify-center rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700">
+              <DatePicker
+                selected={editEntryDate}
+                onChange={(date) => {
+                  setEditEntryDate(date);
+                  setShowEditCalendar(false);
+                }}
+                inline
+                dateFormat="dd-MM-yyyy"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                calendarClassName="edit-entry-date-calendar"
+              />
+            </div>
+          )}
+
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            The date will be updated for the log and its detail entries.
+          </p>
+        </div>
+
+        {/* Calendar CSS - overrides existing range picker styles */}
+        <style>
+          {`
+      .edit-entry-date-calendar.react-datepicker {
+        width: 100%;
+        max-width: 330px;
+        border: none !important;
+        border-radius: 12px;
+        box-shadow: none !important;
+        font-family: inherit;
+        overflow: visible !important;
+      }
+
+      .edit-entry-date-calendar .react-datepicker__month-container {
+        float: none;
+        width: 100%;
+      }
+
+      .edit-entry-date-calendar .react-datepicker__header {
+        width: 100% !important;
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 14px 8px 8px;
+      }
+
+      .edit-entry-date-calendar .react-datepicker__navigation {
+        display: flex !important;
+        top: 12px !important;
+      }
+
+      .edit-entry-date-calendar .react-datepicker__current-month {
+        display: block !important;
+        margin-bottom: 8px;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .edit-entry-date-calendar .react-datepicker__header__dropdown {
+        margin-bottom: 8px;
+      }
+
+      .edit-entry-date-calendar .react-datepicker__month {
+        margin: 6px 0;
+      }
+
+      .edit-entry-date-calendar .react-datepicker__day-name,
+      .edit-entry-date-calendar .react-datepicker__day {
+        width: 2rem;
+        line-height: 2rem;
+        margin: 0.2rem;
+        border-radius: 8px;
+      }
+
+      .edit-entry-date-calendar .react-datepicker__day:hover {
+        background: #eff6ff;
+      }
+
+      .edit-entry-date-calendar .react-datepicker__day--selected {
+        background: #2563eb !important;
+        color: white !important;
+      }
+
+      .edit-entry-date-calendar .react-datepicker__month-select,
+      .edit-entry-date-calendar .react-datepicker__year-select {
+        padding: 5px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: white;
+        font-size: 13px;
+      }
+    `}
+        </style>
+
+        <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={closeEditDateModal}
+            disabled={editDateLoading}
+            className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            onClick={handleUpdateLogEntryDate}
+            disabled={editDateLoading || !editEntryDate}
+            className="btn-primary flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {editDateLoading ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Updating...
+              </>
+            ) : (
+              "Submit"
+            )}
           </button>
         </div>
       </PopupModal>

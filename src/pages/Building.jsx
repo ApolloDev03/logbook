@@ -94,6 +94,28 @@ const PrintIcon = () => (
   </svg>
 );
 
+const ViewLogsIcon = () => (
+  <svg
+    className="h-5 w-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M7 3h7l5 5v13H7V3z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M14 3v5h5M10 13h6M10 17h6"
+    />
+  </svg>
+);
+
 const getToken = () => localStorage.getItem("auth_token") || "";
 
 const getAuthHeaders = () => {
@@ -268,6 +290,13 @@ export default function Building() {
     } finally {
       setViewLoading(false);
     }
+  };
+
+  const handleViewBuildingLogs = (building) => {
+    navigate(
+      `/company-log-report?building_id=${building.building_id}&customer_id=${building.customer_id || building.customer?.customer_id || ""
+      }&building_name=${encodeURIComponent(building.building_name || "")}`
+    );
   };
 
   const handleEditBuilding = (buildingId) => {
@@ -888,6 +917,15 @@ export default function Building() {
 
                               <button
                                 type="button"
+                                title="View Logs"
+                                onClick={() => handleViewBuildingLogs(building)}
+                                className="text-slate-500 transition-colors hover:text-slate-700"
+                              >
+                                <ViewLogsIcon />
+                              </button>
+
+                              <button
+                                type="button"
                                 title="Delete"
                                 onClick={() =>
                                   openDeleteModal(building.building_id)
@@ -986,8 +1024,8 @@ export default function Building() {
                 disabled={loading}
                 onClick={() => handlePageChange(pageNumber)}
                 className={`min-w-[40px] rounded-lg border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${pageNumber === page
-                    ? "border-blue-600 bg-blue-600 text-white"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+                  ? "border-blue-600 bg-blue-600 text-white"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
                   }`}
               >
                 {pageNumber}
@@ -1132,7 +1170,7 @@ export default function Building() {
             </p> */}
 
             <p className="mt-3 break-words text-sm leading-6 text-gray-600 dark:text-gray-400">
-               {qrData?.buildingInfo?.address || "-"} {qrData?.buildingInfo?.address_line_2 || "-"} {qrData?.buildingInfo?.postcode || "-"}
+              {qrData?.buildingInfo?.address || "-"} {qrData?.buildingInfo?.address_line_2 || "-"} {qrData?.buildingInfo?.postcode || "-"}
             </p>
 
             {/* <p className="mt-3 break-words text-sm leading-6 text-gray-600 dark:text-gray-400">
