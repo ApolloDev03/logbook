@@ -8,21 +8,7 @@ import Toggle from "../components/ui/Toggle";
 import PopupModal from "../components/ui/PopupModal";
 import { apiUrl } from "../config";
 
-const PlusIcon = () => (
-  <svg
-    className="h-5 w-5"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M12 5v14M5 12h14"
-    />
-  </svg>
-);
+
 
 const EyeIcon = () => (
   <svg
@@ -571,13 +557,6 @@ export default function Customer() {
     }
   };
 
-  const handleCompanyLogReport = (customer) => {
-    navigate(
-      `/company-log-report?customer_id=${customer.customer_id}&company_name=${encodeURIComponent(
-        customer.customer_company_name || ""
-      )}`
-    );
-  };
 
   return (
     <>
@@ -766,14 +745,7 @@ export default function Customer() {
                               )}
                             </button>
 
-                            <button
-                              type="button"
-                              title="Company Log Report"
-                              onClick={() => handleCompanyLogReport(customer)}
-                              className="text-orange-500 transition-colors hover:text-orange-700"
-                            >
-                              <PlusIcon />
-                            </button>
+                            
                           </>
                         )}
                       </div>

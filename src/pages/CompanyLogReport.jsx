@@ -172,7 +172,8 @@ export default function CompanyLogReport() {
   const [searchParams] = useSearchParams();
 
   const reportCustomerId = searchParams.get("customer_id") || "";
-  const companyName = searchParams.get("company_name") || "";
+  const reportBuildingId = searchParams.get("building_id") || "";
+  const buildingName = searchParams.get("building_name") || "";
 
   const [logs, setLogs] = useState([]);
   const [buildingList, setBuildingList] = useState([]);
@@ -268,7 +269,7 @@ export default function CompanyLogReport() {
 
   useEffect(() => {
     getLogList(1);
-    getBuildingList(reportCustomerId);
+    // getBuildingList(reportCustomerId);
   }, []);
 
   const getLogList = async (
@@ -287,8 +288,8 @@ export default function CompanyLogReport() {
       const payload = {
         page: pageNumber,
         limit: customLimit,
-        search: customFilters.search || "",
-        building_id: customFilters.buildingId || "",
+        search: "",
+        building_id: reportBuildingId,
         created_by_id:
           authUser?.role_id === 1 || authUser?.role_id === 3
             ? null
@@ -319,8 +320,8 @@ export default function CompanyLogReport() {
       setLogs([]);
       toast.error(
         error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          "Failed to load logs."
+        error?.response?.data?.error ||
+        "Failed to load logs."
       );
     } finally {
       setLoading(false);
@@ -357,8 +358,8 @@ export default function CompanyLogReport() {
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          "Failed to load log details."
+        error?.response?.data?.error ||
+        "Failed to load log details."
       );
       closeViewModal();
     } finally {
@@ -404,8 +405,8 @@ export default function CompanyLogReport() {
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          "Failed to print log."
+        error?.response?.data?.error ||
+        "Failed to print log."
       );
     } finally {
       setPrintLoadingId(null);
@@ -473,7 +474,7 @@ export default function CompanyLogReport() {
           const text = await error.response.data.text();
           const json = JSON.parse(text);
           message = json?.message || message;
-        } catch {}
+        } catch { }
       } else {
         message =
           error?.response?.data?.message ||
@@ -598,7 +599,7 @@ export default function CompanyLogReport() {
     setFilters(emptyFilters);
     setPage(1);
 
-    getBuildingList(reportCustomerId);
+    // getBuildingList(reportCustomerId);
     getLogList(1, limit, emptyFilters);
   };
 
@@ -607,8 +608,8 @@ export default function CompanyLogReport() {
       const response = await axios.post(
         `${apiUrl}/auth/export_log`,
         {
-          search: filters.search || "",
-          building_id: filters.buildingId || "",
+          search:"",
+          building_id:reportBuildingId,
           customer_id: reportCustomerId,
           start_date: filters.fromDate || "",
           end_date: filters.toDate || "",
@@ -718,8 +719,8 @@ export default function CompanyLogReport() {
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          "Failed to send log PDF."
+        error?.response?.data?.error ||
+        "Failed to send log PDF."
       );
     } finally {
       setMailSending(false);
@@ -730,90 +731,62 @@ export default function CompanyLogReport() {
     <>
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Company Log Report
+          Building Log Report
         </h1>
 
         <Breadcrumb
-          pageName={companyName || "Company Log Report"}
+          pageName={buildingName || "Building Log Report"}
           parentPage="Customer Management"
         />
       </div>
 
       <div className="card overflow-visible rounded-xl">
         <div className="m-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-            <input
-              type="text"
-              placeholder="Search List In Postcode,Address..."
-              className="form-input"
-              value={filters.search}
-              onChange={(e) => updateFilter("search", e.target.value)}
-            />
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-start">
+            <div className="w-full lg:max-w-[360px]">
+              <UniqueDateRangePicker
+                value={{
+                  fromDate: filters.fromDate,
+                  toDate: filters.toDate,
+                }}
+                onChange={({ fromDate, toDate }) => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    fromDate,
+                    toDate,
+                  }));
 
-            <div className="relative">
-              <select
-                className="form-select"
-                value={filters.buildingId}
-                onChange={(e) => updateFilter("buildingId", e.target.value)}
-                disabled={buildingLoading}
-              >
-                <option value="">All Buildings</option>
-
-                {buildingList.map((building) => (
-                  <option
-                    key={building.building_id}
-                    value={building.building_id}
-                  >
-                    {building.building_name}
-                  </option>
-                ))}
-              </select>
-
-              <SelectArrow />
+                  setPage(1);
+                }}
+                onClear={clearDateRange}
+              />
             </div>
 
-            <UniqueDateRangePicker
-              value={{
-                fromDate: filters.fromDate,
-                toDate: filters.toDate,
-              }}
-              onChange={({ fromDate, toDate }) => {
-                setFilters((prev) => ({
-                  ...prev,
-                  fromDate,
-                  toDate,
-                }));
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => getLogList(1)}
+                className="btn-primary disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                Search
+              </button>
 
-                setPage(1);
-              }}
-              onClear={clearDateRange}
-            />
-          </div>
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+              >
+                Clear
+              </button>
 
-          <div className="flex justify-end gap-4 pt-4">
-            <button
-              type="button"
-              onClick={() => getLogList(1)}
-              className="btn-primary disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              Search
-            </button>
-
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-            >
-              Clear
-            </button>
-
-            <button
-              type="button"
-              onClick={exportLogs}
-              className="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
-            >
-              Export
-            </button>
+              <button
+                type="button"
+                onClick={exportLogs}
+                className="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+              >
+                Export
+              </button>
+            </div>
           </div>
         </div>
 
@@ -839,8 +812,8 @@ export default function CompanyLogReport() {
 
                 {(authUser.role_id === 1 ||
                   authUser.customer?.customer_id === null) && (
-                  <th className="table-th whitespace-nowrap">Company Name</th>
-                )}
+                    <th className="table-th whitespace-nowrap">Company Name</th>
+                  )}
 
                 <th className="table-th whitespace-nowrap">
                   System & Purpose
@@ -879,10 +852,10 @@ export default function CompanyLogReport() {
 
                     {(authUser.role_id === 1 ||
                       authUser.customer?.customer_id === null) && (
-                      <td className="table-td whitespace-nowrap">
-                        {log.customer_company_name || "-"}
-                      </td>
-                    )}
+                        <td className="table-td whitespace-nowrap">
+                          {log.customer_company_name || "-"}
+                        </td>
+                      )}
 
                     <td className="table-td whitespace-nowrap">
                       {log?.maintenance_entries?.map((entry, index) => (
@@ -1019,11 +992,10 @@ export default function CompanyLogReport() {
                 type="button"
                 disabled={loading}
                 onClick={() => handlePageChange(pageNumber)}
-                className={`min-w-[40px] rounded-lg border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                  pageNumber === page
+                className={`min-w-[40px] rounded-lg border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${pageNumber === page
                     ? "border-blue-600 bg-blue-600 text-white"
                     : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
-                }`}
+                  }`}
               >
                 {pageNumber}
               </button>
@@ -1095,16 +1067,16 @@ export default function CompanyLogReport() {
 
             <span className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {selectedLog?.entry_on_place !== undefined &&
-              selectedLog?.entry_on_place !== null ? (
+                selectedLog?.entry_on_place !== null ? (
                 <>
                   <span className="font-semibold">Generate Via:</span>{" "}
                   {Number(selectedLog.entry_on_place) === 0
                     ? "Manual"
                     : Number(selectedLog.entry_on_place) === 1
-                    ? "Scanner"
-                    : Number(selectedLog.entry_on_place) === 2
-                    ? "Mobile Manual"
-                    : ""}
+                      ? "Scanner"
+                      : Number(selectedLog.entry_on_place) === 2
+                        ? "Mobile Manual"
+                        : ""}
                 </>
               ) : null}
             </span>
@@ -1145,8 +1117,8 @@ export default function CompanyLogReport() {
                 {!["uk", "united kingdom"].includes(
                   selectedLog?.country_name?.toLowerCase()
                 ) && (
-                  <Info label="State" value={selectedLog?.state_name} />
-                )}
+                    <Info label="State" value={selectedLog?.state_name} />
+                  )}
 
                 <Info label="City" value={selectedLog?.city_name} />
                 <Info label="Postcode" value={selectedLog?.postcode} />
@@ -1303,9 +1275,9 @@ function UniqueDateRangePicker({ value, onChange, onClear }) {
   const displayDate =
     value.fromDate && value.toDate
       ? `${format(startDate, "MMM dd, yyyy")} - ${format(
-          endDate,
-          "MMM dd, yyyy"
-        )}`
+        endDate,
+        "MMM dd, yyyy"
+      )}`
       : "Select Date Range";
 
   useEffect(() => {
@@ -1493,9 +1465,8 @@ function UniqueDateRangePicker({ value, onChange, onClear }) {
 
         {open && (
           <div
-            className={`absolute left-1/2 top-full z-[9999] mt-3 w-[calc(100vw-32px)] max-w-[360px] -translate-x-1/2 rounded-2xl bg-white p-3 shadow-2xl dark:bg-gray-900 sm:left-0 sm:w-[380px] sm:translate-x-0 md:left-auto md:right-0 md:translate-x-0 ${
-              headerView !== "days" ? "hide-day-grid" : ""
-            }`}
+            className={`absolute left-1/2 top-full z-[9999] mt-3 w-[calc(100vw-32px)] max-w-[360px] -translate-x-1/2 rounded-2xl bg-white p-3 shadow-2xl dark:bg-gray-900 sm:left-0 sm:w-[380px] sm:translate-x-0 md:left-auto md:right-0 md:translate-x-0 ${headerView !== "days" ? "hide-day-grid" : ""
+              }`}
           >
             <DatePicker
               selected={startDate}
@@ -1558,13 +1529,11 @@ function UniqueDateRangePicker({ value, onChange, onClear }) {
                               setMonthGridYear(year);
                               setHeaderView("months");
                             }}
-                            className={`year-grid-item ${
-                              year === currentYear ? "is-selected" : ""
-                            } ${
-                              year < start || year > start + 9
+                            className={`year-grid-item ${year === currentYear ? "is-selected" : ""
+                              } ${year < start || year > start + 9
                                 ? "is-outside"
                                 : ""
-                            }`}
+                              }`}
                           >
                             {year}
                           </button>
@@ -1623,11 +1592,10 @@ function UniqueDateRangePicker({ value, onChange, onClear }) {
                               changeMonth(index);
                               setHeaderView("days");
                             }}
-                            className={`month-grid-item ${
-                              year === currentYear && index === date.getMonth()
+                            className={`month-grid-item ${year === currentYear && index === date.getMonth()
                                 ? "is-selected"
                                 : ""
-                            }`}
+                              }`}
                           >
                             {name}
                           </button>
