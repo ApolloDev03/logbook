@@ -1147,7 +1147,7 @@ export default function Building() {
 
         <div className="text-center">
           <h2 className="mb-5  text-xl  font-bold text-gray-900 dark:text-white">
-            Fire safety Log book
+            AF Logbook
           </h2>
           <div className="mt-6 flex justify-center">
             {qrData?.qrCode ? (

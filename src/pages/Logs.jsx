@@ -1261,6 +1261,7 @@ export default function Logs() {
                               <MailIcon />
                             </button>
 
+                            {roleId === 1 && (
                             <button
                               type="button"
                               title="Edit Date"
@@ -1269,6 +1270,7 @@ export default function Logs() {
                             >
                               <EditDateIcon />
                             </button>
+                            )}
 
                             {/* <button
                               type="button"
@@ -1615,7 +1617,7 @@ export default function Logs() {
       <PopupModal
         open={editDateModalOpen}
         onClose={closeEditDateModal}
-        maxWidth="max-w-[480px]"
+        maxWidth="max-w-[550px]"
         className="px-3 py-4 sm:px-4 sm:py-6"
         bodyClassName="max-h-[90vh] overflow-y-auto p-5 sm:p-7"
       >
@@ -1630,17 +1632,17 @@ export default function Logs() {
 
         <div className="pr-10">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            Edit Date
+            Edit Log Creation Date
           </h2>
 
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Select a new entry date for this log.
+            Select a new entry date for this log to Update the log creation date.
           </p>
         </div>
 
         <div className="mt-6">
           <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Entry Date <span className="text-red-500">*</span>
+            Change Date <span className="text-red-500">*</span>
           </label>
 
           {/* Date field */}

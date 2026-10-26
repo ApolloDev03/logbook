@@ -581,7 +581,7 @@ const getAuthHeaders = () => {
 };
 
 const fields = [
-  { key: "prefix", label: "Prefix", type: "text" },
+  { key: "prefix", label: "Company Id", type: "text" },
   { key: "contact", label: "Customer Name", type: "text" },
   { key: "company", label: "Company Name", type: "text" },
   { key: "email", label: "Email ID", type: "text" },
@@ -866,12 +866,12 @@ export default function CreateCustomer() {
     }
 
     if (!form.prefix.trim()) {
-      toast.error("Please enter prefix.");
+      toast.error("Please enter Company Id.");
       return false;
     }
 
     if (!/^[A-Za-z]{1,3}$/.test(form.prefix.trim())) {
-      toast.error("Prefix must be alphabets only and maximum 3 characters.");
+      toast.error("Company Id must be alphabets only and maximum 3 characters.");
       return false;
     }
 
