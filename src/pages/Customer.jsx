@@ -900,7 +900,7 @@ export default function Customer() {
 
               <div className="grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2 sm:gap-y-8 md:grid-cols-3">
                 <Info
-                  label="Prefix"
+                  label="Company Id"
                   value={selectedCustomer?.Prefix}
                 />
                 <Info
