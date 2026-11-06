@@ -453,24 +453,42 @@ export default function CreateEmployee() {
       fileInput.value = "";
     }
   };
-  const isRequiredField = (field) => {
-    if (
-      [
-        "name",
-        "role",
-        "email",
-        "mobilenumber",
-        "postcode",
-        "address",
-        "country",
-        "state",
-        "city",
-      ].includes(field.key)
-    ) {
-      return true;
-    }
+  // const isRequiredField = (field) => {
+  //   if (
+  //     [
+  //       "name",
+  //       "role",
+  //       "email",
+  //       "mobilenumber",
+  //       "postcode",
+  //       "address",
+  //       "country",
+  //       "state",
+  //       "city",
+  //     ].includes(field.key)
+  //   ) {
+  //     return true;
+  //   }
 
-    if (field.key === "state" && !isUK) {
+  //   if (field.key === "state" && !isUK) {
+  //     return true;
+  //   }
+
+  //   if (field.key === "qrcodeaccess" && canShowQRCodeAccess) {
+  //     return true;
+  //   }
+
+  //   // if (field.key === "uploadsignatureimg" && isEngineerRole) {
+  //   //   return true;
+  //   // }
+  //   if (field.key === "uploadsignatureimg" && canShowQRCodeAccess) {
+  //     return true;
+  //   }
+  //   return false;
+  // };
+
+  const isRequiredField = (field) => {
+    if (["name", "role", "email"].includes(field.key)) {
       return true;
     }
 
@@ -478,14 +496,65 @@ export default function CreateEmployee() {
       return true;
     }
 
-    // if (field.key === "uploadsignatureimg" && isEngineerRole) {
-    //   return true;
-    // }
-    if (field.key === "uploadsignatureimg" && canShowQRCodeAccess) {
-      return true;
-    }
     return false;
   };
+
+  // const validateForm = () => {
+  //   const newErrors = {};
+
+  //   if (!form.name.trim()) {
+  //     newErrors.name = "Employee Name is required";
+  //   }
+
+  //   if (!form.role) {
+  //     newErrors.role = "Role is required";
+  //   }
+
+  //   if (canShowQRCodeAccess && form.qrcodeaccess === "") {
+  //     newErrors.qrcodeaccess = "QR Code Access is required";
+  //   }
+
+  //   if (!form.email.trim()) {
+  //     newErrors.email = "Email is required";
+  //   }
+
+  //   if (!form.mobilenumber.trim()) {
+  //     newErrors.mobilenumber = "Contact Number is required";
+  //   }
+
+  //   if (!form.postcode.trim()) {
+  //     newErrors.postcode = "Post Code is required";
+  //   }
+
+  //   if (!form.address.trim()) {
+  //     newErrors.address = "Address is required";
+  //   }
+
+  //   if (!form.country) {
+  //     newErrors.country = "Country is required";
+  //   }
+
+  //   if (!isUK && !form.state) {
+  //     newErrors.state = "State is required";
+  //   }
+
+  //   if (!form.city || form.city === "other") {
+  //     newErrors.city = "City is required";
+  //   }
+
+  //   if (canShowQRCodeAccess && !form.uploadsignatureimg && !oldSignatureUrl) {
+  //     newErrors.uploadsignatureimg = "Signature is required";
+  //   }
+
+  //   setErrors(newErrors);
+
+  //   if (Object.keys(newErrors).length > 0) {
+  //     toast.error("Please fill all required fields.");
+  //     return false;
+  //   }
+
+  //   return true;
+  // };
 
   const validateForm = () => {
     const newErrors = {};
@@ -504,34 +573,6 @@ export default function CreateEmployee() {
 
     if (!form.email.trim()) {
       newErrors.email = "Email is required";
-    }
-
-    if (!form.mobilenumber.trim()) {
-      newErrors.mobilenumber = "Contact Number is required";
-    }
-
-    if (!form.postcode.trim()) {
-      newErrors.postcode = "Post Code is required";
-    }
-
-    if (!form.address.trim()) {
-      newErrors.address = "Address is required";
-    }
-
-    if (!form.country) {
-      newErrors.country = "Country is required";
-    }
-
-    if (!isUK && !form.state) {
-      newErrors.state = "State is required";
-    }
-
-    if (!form.city || form.city === "other") {
-      newErrors.city = "City is required";
-    }
-
-    if (canShowQRCodeAccess && !form.uploadsignatureimg && !oldSignatureUrl) {
-      newErrors.uploadsignatureimg = "Signature is required";
     }
 
     setErrors(newErrors);
@@ -557,28 +598,88 @@ export default function CreateEmployee() {
     try {
       setSaveLoading(true);
 
+      // const formData = new FormData();
+
+      // if (isEditMode) {
+      //   formData.append("employee_id", String(employeeId));
+      // }
+      // formData.append("company_id", authUser?.company_id);
+      // formData.append("name", form.name);
+      // formData.append("role_id", form.role);
+      // formData
+      // formData.append(
+      //   "qrcodeaccess",
+      //   canShowQRCodeAccess ? form.qrcodeaccess : "0",
+      // );
+      // formData.append("email", form.email);
+      // formData.append("mobilenumber", form.mobilenumber);
+      // formData.append("postcode", form.postcode);
+      // formData.append("address", form.address);
+      // formData.append("address_line_2", form.address_line_2);
+      // formData.append("countryid", form.country);
+      // formData.append("stateid", isUK ? "37" : form.state);
+      // formData.append("cityid", form.city);
+
+      // if (form.uploadsignatureimg) {
+      //   formData.append("uploadsignatureimg", form.uploadsignatureimg);
+      // }
+
       const formData = new FormData();
 
       if (isEditMode) {
         formData.append("employee_id", String(employeeId));
       }
-      formData.append("company_id", authUser?.company_id);
-      formData.append("name", form.name);
+
+      // Required / existing fields
+      formData.append("company_id", authUser?.company_id ?? "");
+      formData.append("name", form.name.trim());
       formData.append("role_id", form.role);
-      formData
+
       formData.append(
         "qrcodeaccess",
-        canShowQRCodeAccess ? form.qrcodeaccess : "0",
+        canShowQRCodeAccess ? form.qrcodeaccess : "0"
       );
-      formData.append("email", form.email);
-      formData.append("mobilenumber", form.mobilenumber);
-      formData.append("postcode", form.postcode);
-      formData.append("address", form.address);
-      formData.append("address_line_2", form.address_line_2);
-      formData.append("countryid", form.country);
-      formData.append("stateid", isUK ? "37" : form.state);
-      formData.append("cityid", form.city);
 
+      formData.append("email", form.email.trim());
+
+      // Optional fields - send only when value exists
+      const appendOptionalField = (key, value) => {
+        const finalValue = String(value ?? "").trim();
+
+        if (finalValue !== "") {
+          formData.append(key, finalValue);
+        }
+      };
+
+      appendOptionalField("mobilenumber", form.mobilenumber);
+      appendOptionalField("postcode", form.postcode);
+      appendOptionalField("address", form.address);
+      appendOptionalField("address_line_2", form.address_line_2);
+
+      // appendOptionalField("countryid", form.country);
+
+      // if (form.country) {
+      //   appendOptionalField("stateid", isUK ? "37" : form.state);
+      // }
+
+      // if (form.city && form.city !== "other") {
+      //   appendOptionalField("cityid", form.city);
+      // }
+
+      // Country, State and City - send 0 if not selected
+      formData.append("countryid", form.country || "0");
+
+      formData.append(
+        "stateid",
+        form.country ? (isUK ? "37" : form.state || "0") : "0"
+      );
+
+      formData.append(
+        "cityid",
+        form.city && form.city !== "other" ? form.city : "0"
+      );
+
+      // Signature is optional
       if (form.uploadsignatureimg) {
         formData.append("uploadsignatureimg", form.uploadsignatureimg);
       }
@@ -861,7 +962,7 @@ export default function CreateEmployee() {
                           id="uploadsignatureimg"
                           type="file"
                           accept="image/*"
-                          required={canShowQRCodeAccess && !oldSignatureUrl}
+                          // required={canShowQRCodeAccess && !oldSignatureUrl}
                           className="block w-full cursor-pointer rounded-lg border border-gray-300 bg-white text-sm text-gray-700 shadow-sm outline-none transition file:mr-4 file:border-0 file:border-r file:border-gray-300 file:bg-gray-100 file:px-4 file:py-3 file:text-sm file:font-medium file:text-gray-700 hover:border-blue-400 focus:border-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:file:border-gray-700 dark:file:bg-gray-800 dark:file:text-gray-200"
                           onChange={(e) =>
                             update(
