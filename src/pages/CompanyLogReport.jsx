@@ -1153,10 +1153,10 @@ export default function CompanyLogReport() {
                       label="End Time"
                       value={`${formatOnlyTime(entry?.finish_time)} `}
                     />
-                    <Info
+                    {/* <Info
                       label="Remidial Action Taken"
                       value={entry?.remark || "-"}
-                    />
+                    /> */}
                   </div>
                 </div>
               ))
@@ -1176,10 +1176,10 @@ export default function CompanyLogReport() {
                   label="Engineer Name"
                   value={selectedLog?.created_by_name}
                 />
-                <Info
+                {/* <Info
                   label="Engineer Email"
                   value={selectedLog?.created_by_email}
-                />
+                /> */}
               </div>
             </div>
           </div>

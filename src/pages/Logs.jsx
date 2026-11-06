@@ -1517,7 +1517,7 @@ export default function Logs() {
                         entry?.finish_time,
                       )} `}
                     />
-                    <Info label="Remidial Action Taken" value={entry?.remark || "-"} />
+                    {/* <Info label="Remidial Action Taken" value={entry?.remark || "-"} /> */}
                   </div>
                 </div>
 
@@ -1539,10 +1539,10 @@ export default function Logs() {
                   label="Engineer Name"
                   value={selectedLog?.created_by_name}
                 />
-                <Info
+                {/* <Info
                   label="Engineer Email"
                   value={selectedLog?.created_by_email}
-                />
+                /> */}
               </div>
             </div>
           </div>
